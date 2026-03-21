@@ -10,7 +10,6 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import BottomSheet from '@gorhom/bottom-sheet';
 import {
   BookmarkCheck,

@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import {
   Leaf, Beef, Milk, Wheat, Archive, Snowflake,
   Coffee, Droplets, Sparkles, Croissant, ChevronDown, ChevronUp,
@@ -109,19 +108,14 @@ export function PantrySection({
 
       {/* Items */}
       {!collapsed && (
-        <FlashList
-          data={items}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <PantryItemRow
-              item={item}
-              onUpdateQuantity={onUpdateQuantity}
-              onDelete={onDelete}
-            />
-          )}
-          estimatedItemSize={64}
-          scrollEnabled={false}
-        />
+        {items.map((item) => (
+          <PantryItemRow
+            key={item.id}
+            item={item}
+            onUpdateQuantity={onUpdateQuantity}
+            onDelete={onDelete}
+          />
+        ))}
       )}
     </View>
   );

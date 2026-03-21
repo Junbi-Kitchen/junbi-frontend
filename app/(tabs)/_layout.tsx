@@ -1,10 +1,9 @@
-// Purpose: Custom tab bar layout for the 5 main app tabs with badge support
+// Purpose: Custom tab bar layout for the 4 main app tabs with badge support
 
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Tabs } from 'expo-router';
 import {
-  Home,
   Archive,
   ShoppingCart,
   BookOpen,
@@ -14,8 +13,7 @@ import { TOKENS } from '../../lib/tokens';
 import { useGroceryStore } from '../../stores/groceryStore';
 
 const TABS = [
-  { name: 'index', label: 'Feed', icon: Home },
-  { name: 'pantry', label: 'Pantry', icon: Archive },
+  { name: 'index', label: 'Pantry', icon: Archive },
   { name: 'recipes', label: 'Recipes', icon: BookOpen },
   { name: 'grocery', label: 'Grocery', icon: ShoppingCart },
   { name: 'profile', label: 'Profile', icon: User },
@@ -49,7 +47,7 @@ function CustomTabBar({
     >
       {state.routes.map((route, idx) => {
         const tab = TABS.find((t) => t.name === route.name) ?? TABS[idx];
-        const Icon = tab?.icon ?? Home;
+        const Icon = tab?.icon ?? Archive;
         const isActive = state.index === idx;
         const activeColor = TOKENS.colors.primary;
         const inactiveColor = TOKENS.colors.textMuted;
@@ -129,7 +127,6 @@ export default function TabLayout() {
       screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="pantry" />
       <Tabs.Screen name="recipes" />
       <Tabs.Screen name="grocery" />
       <Tabs.Screen name="profile" />

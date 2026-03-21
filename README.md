@@ -142,14 +142,14 @@ gook-frontend/
 ├── app/                      # Expo Router screens (file-based routing)
 │   ├── _layout.tsx           # Root layout — providers and navigation shell
 │   ├── import.tsx            # Recipe import screen
+│   ├── connected-accounts.tsx # Connected accounts settings
 │   ├── (auth)/
 │   │   └── onboarding.tsx    # 4-step onboarding flow
 │   ├── (tabs)/
-│   │   ├── _layout.tsx       # Custom bottom tab bar
-│   │   ├── index.tsx         # Recipe swipe feed (home)
-│   │   ├── pantry.tsx        # Pantry management
-│   │   ├── grocery.tsx       # Grocery list + Instacart ordering
+│   │   ├── _layout.tsx       # Custom bottom tab bar (4 tabs)
+│   │   ├── index.tsx         # Pantry management (home)
 │   │   ├── recipes.tsx       # Saved recipes & collections (Spotify-style)
+│   │   ├── grocery.tsx       # Grocery list + Instacart ordering
 │   │   └── profile.tsx       # User profile + addresses
 │   └── recipe/
 │       └── [id].tsx          # Recipe detail (dynamic route)
@@ -301,8 +301,7 @@ cd ios && pod install && cd ..
 
 | Tab | Screen | Description |
 |---|---|---|
-| Feed | `index.tsx` | Swipe-based recipe discovery feed |
-| Pantry | `pantry.tsx` | Visual category grid with quick-add chips |
+| Pantry | `index.tsx` | Visual category grid with quick-add chips (home) |
 | Recipes | `recipes.tsx` | Saved recipes in Spotify-playlist-style collections |
 | Grocery | `grocery.tsx` | Grocery list with Instacart ordering + address management |
 | Profile | `profile.tsx` | Dietary preferences, connected accounts, saved addresses |

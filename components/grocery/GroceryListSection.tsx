@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import { ShoppingBag } from 'lucide-react-native';
 import { GroceryItemRow } from './GroceryItemRow';
 import { TOKENS } from '../../lib/tokens';
@@ -59,19 +58,14 @@ export function GroceryListSection({
         </Text>
       </View>
 
-      <FlashList
-        data={items}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <GroceryItemRow
-            item={item}
-            onToggle={onToggle}
-            onDelete={onDelete}
-          />
-        )}
-        estimatedItemSize={68}
-        scrollEnabled={false}
-      />
+      {items.map((item) => (
+        <GroceryItemRow
+          key={item.id}
+          item={item}
+          onToggle={onToggle}
+          onDelete={onDelete}
+        />
+      ))}
     </View>
   );
 }

@@ -1,4 +1,4 @@
-// Purpose: User profile screen with preferences, connected accounts, import history, and settings
+// Purpose: User profile screen with preferences, connected accounts link, addresses, and settings
 
 import React, { useRef, useState } from 'react';
 import {
@@ -10,7 +10,7 @@ import {
   Switch,
 } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { User } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { BottomSheetWrapper } from '../../components/ui/BottomSheetWrapper';
 import { DietaryTagRow } from '../../components/recipe/DietaryTagRow';
 import { RecipeCardMini } from '../../components/recipe/RecipeCardMini';
@@ -32,10 +32,14 @@ const ALL_TAGS: DietaryTag[] = [
 export default function ProfileScreen() {
   const router = useRouter();
   const editTagsSheetRef = useRef<BottomSheet>(null);
-  const { preferences, toggleTag, hasTag, connectAccount, disconnectAccount, isConnected } =
+  const { preferences, toggleTag, hasTag, isConnected } =
     useUserPreferences();
   const { user } = useUserStore();
   const { saved: savedRecipes } = useRecipeStore();
+
+  const connectedCount = (['instagram', 'tiktok', 'instacart'] as const).filter(
+    (p) => isConnected(p)
+  ).length;
 
   const initials = user?.name
     .split(' ')
@@ -106,64 +110,47 @@ export default function ProfileScreen() {
             )}
           </Card>
 
-          {/* Connected Accounts */}
+          {/* Connected Accounts — navigates to settings page */}
           <SectionHeader title="Connected Accounts" />
-          <Card padding="md" style={{ marginBottom: 20 }}>
-            {(['instagram', 'tiktok', 'instacart'] as const).map((platform, idx, arr) => (
+          <TouchableOpacity
+            onPress={() => router.push('/connected-accounts')}
+            accessibilityLabel="Manage connected accounts"
+            style={{ marginBottom: 20 }}
+          >
+            <Card padding="md">
               <View
-                key={platform}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  paddingVertical: 10,
-                  borderBottomWidth: idx < arr.length - 1 ? 1 : 0,
-                  borderBottomColor: TOKENS.colors.borderLight,
+                  justifyContent: 'space-between',
                 }}
               >
-                <Text
-                  style={{
-                    flex: 1,
-                    fontSize: 15,
-                    fontWeight: '500',
-                    color: TOKENS.colors.text,
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {platform}
-                </Text>
-                {isConnected(platform) && (
+                <View>
                   <Text
                     style={{
-                      fontSize: 13,
-                      color: TOKENS.colors.textSecondary,
-                      marginRight: 12,
+                      fontSize: TOKENS.typography.sizes.md,
+                      fontWeight: TOKENS.typography.weights.medium,
+                      color: TOKENS.colors.text,
                     }}
                   >
-                    {user?.connectedAccounts[platform]}
+                    {connectedCount > 0
+                      ? `${connectedCount} account${connectedCount > 1 ? 's' : ''} connected`
+                      : 'No accounts connected'}
                   </Text>
-                )}
-                <Switch
-                  value={isConnected(platform)}
-                  onValueChange={(val) => {
-                    if (val) {
-                      connectAccount(platform, `@user.${platform}`);
-                    } else {
-                      disconnectAccount(platform);
-                    }
-                  }}
-                  trackColor={{
-                    false: TOKENS.colors.border,
-                    true: TOKENS.colors.primaryLight,
-                  }}
-                  thumbColor={
-                    isConnected(platform)
-                      ? TOKENS.colors.primary
-                      : TOKENS.colors.white
-                  }
-                />
+                  <Text
+                    style={{
+                      fontSize: TOKENS.typography.sizes.sm,
+                      color: TOKENS.colors.textSecondary,
+                      marginTop: 2,
+                    }}
+                  >
+                    Instagram, TikTok, Instacart
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={TOKENS.colors.textMuted} />
               </View>
-            ))}
-          </Card>
+            </Card>
+          </TouchableOpacity>
 
           {/* Addresses */}
           <SectionHeader title="Saved Addresses" />
