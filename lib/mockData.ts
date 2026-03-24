@@ -9,6 +9,8 @@ import type {
   Order,
   User,
   UserAddress,
+  WasteLogEntry,
+  WeeklyTrend,
 } from '../types';
 
 export const MOCK_RECIPES: Recipe[] = [
@@ -440,3 +442,25 @@ export const MOCK_USER: User = {
   addresses: MOCK_ADDRESSES,
   defaultAddressId: 'addr-1',
 };
+
+export const MOCK_WASTE_LOG: WasteLogEntry[] = [
+  { id: 'wl-1', itemName: 'Spinach', action: 'used', estimatedValue: 2.5, date: '2026-03-22T18:00:00Z' },
+  { id: 'wl-2', itemName: 'Chicken Breast', action: 'used', estimatedValue: 5.0, date: '2026-03-21T19:30:00Z' },
+  { id: 'wl-3', itemName: 'Yogurt', action: 'used', estimatedValue: 3.5, date: '2026-03-20T12:00:00Z' },
+  { id: 'wl-4', itemName: 'Lettuce', action: 'tossed', estimatedValue: 2.0, date: '2026-03-19T09:00:00Z' },
+  { id: 'wl-5', itemName: 'Avocado', action: 'used', estimatedValue: 2.5, date: '2026-03-18T20:00:00Z' },
+  { id: 'wl-6', itemName: 'Salmon', action: 'used', estimatedValue: 8.0, date: '2026-03-17T18:30:00Z' },
+  { id: 'wl-7', itemName: 'Bread', action: 'tossed', estimatedValue: 3.0, date: '2026-03-16T10:00:00Z' },
+  { id: 'wl-8', itemName: 'Bell Peppers', action: 'used', estimatedValue: 3.0, date: '2026-03-15T19:00:00Z' },
+  { id: 'wl-9', itemName: 'Ground Beef', action: 'used', estimatedValue: 5.0, date: '2026-03-14T18:00:00Z' },
+  { id: 'wl-10', itemName: 'Mushrooms', action: 'used', estimatedValue: 2.5, date: '2026-03-13T17:30:00Z' },
+  { id: 'wl-11', itemName: 'Milk', action: 'tossed', estimatedValue: 3.5, date: '2026-03-12T08:00:00Z' },
+  { id: 'wl-12', itemName: 'Eggs', action: 'used', estimatedValue: 4.0, date: '2026-03-10T12:00:00Z' },
+];
+
+export const MOCK_WEEKLY_TRENDS: WeeklyTrend[] = [
+  { week: 'Feb 24', saved: 8.5, wasted: 3.0 },
+  { week: 'Mar 3', saved: 12.0, wasted: 2.0 },
+  { week: 'Mar 10', saved: 14.5, wasted: 3.5 },
+  { week: 'Mar 17', saved: 12.5, wasted: 0 },
+];

@@ -127,6 +127,20 @@ export interface UserAddress {
   isDefault: boolean;
 }
 
+export interface WasteLogEntry {
+  id: string;
+  itemName: string;
+  action: 'used' | 'tossed';
+  estimatedValue: number;
+  date: string;
+}
+
+export interface WeeklyTrend {
+  week: string;
+  saved: number;
+  wasted: number;
+}
+
 export interface UserPreferences {
   dietaryTags: DietaryTag[];
   allergies: string[];

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useRef } from 'react';
 import { View } from 'react-native';
+import { TOKENS } from '../../lib/tokens';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
@@ -13,7 +14,7 @@ interface BottomSheetWrapperProps {
   children: React.ReactNode;
   onClose?: () => void;
   initialIndex?: number;
-  sheetRef?: React.RefObject<BottomSheet>;
+  sheetRef?: React.RefObject<BottomSheet | null>;
 }
 
 export function BottomSheetWrapper({
@@ -46,8 +47,8 @@ export function BottomSheetWrapper({
       onClose={onClose}
       backdropComponent={renderBackdrop}
       enablePanDownToClose
-      backgroundStyle={{ backgroundColor: '#FFFFFF' }}
-      handleIndicatorStyle={{ backgroundColor: '#E8E8E3', width: 40 }}
+      backgroundStyle={{ backgroundColor: TOKENS.colors.white }}
+      handleIndicatorStyle={{ backgroundColor: TOKENS.colors.border, width: 40 }}
     >
       <BottomSheetView style={{ flex: 1 }}>
         {children}

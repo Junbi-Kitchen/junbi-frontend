@@ -37,6 +37,7 @@ export default function RootLayout() {
               <Stack.Screen name="recipe/[id]" />
               <Stack.Screen name="import" />
               <Stack.Screen name="connected-accounts" />
+              <Stack.Screen name="profile" />
             </Stack>
             <StatusBar style="dark" />
           </BottomSheetModalProvider>

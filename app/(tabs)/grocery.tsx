@@ -4,10 +4,10 @@ import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { ShoppingCart, MapPin, Navigation } from 'lucide-react-native';
 import { GroceryListSection } from '../../components/grocery/GroceryListSection';
@@ -53,7 +53,7 @@ export default function GroceryScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
         <View style={{ padding: 16, gap: 12 }}>
           <SkeletonLoader width="100%" height={44} borderRadius={12} />
           <SkeletonLoader width="100%" height={200} borderRadius={12} />
@@ -64,7 +64,7 @@ export default function GroceryScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
       {/* Header */}
       <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
         <Text
@@ -239,8 +239,8 @@ export default function GroceryScreen() {
         {totalItems === 0 ? (
           <EmptyState
             icon={ShoppingCart}
-            title="Your list is empty"
-            subtitle="Save a recipe to automatically generate your grocery list."
+            title="No groceries needed"
+            subtitle="Your pantry's got you covered. When you need something, I'll add it here."
           />
         ) : groupMode === 'aisle' ? (
           aisles.map((aisle) => (
@@ -263,7 +263,7 @@ export default function GroceryScreen() {
             />
           ))
         )}
-        <View style={{ height: uncheckedCount > 0 ? 140 : 40 }} />
+        <View style={{ height: uncheckedCount > 0 ? 80 : 8 }} />
       </ScrollView>
 
       {/* Cart summary */}

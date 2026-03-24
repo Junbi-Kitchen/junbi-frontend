@@ -4,25 +4,25 @@ import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Switch,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { ChevronRight } from 'lucide-react-native';
-import { BottomSheetWrapper } from '../../components/ui/BottomSheetWrapper';
-import { DietaryTagRow } from '../../components/recipe/DietaryTagRow';
-import { RecipeCardMini } from '../../components/recipe/RecipeCardMini';
-import { Badge } from '../../components/ui/Badge';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { useUserPreferences } from '../../hooks/useUserPreferences';
-import { useUserStore } from '../../stores/userStore';
-import { useRecipeStore } from '../../stores/recipeStore';
-import { TOKENS } from '../../lib/tokens';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { BottomSheetWrapper } from '../components/ui/BottomSheetWrapper';
+import { DietaryTagRow } from '../components/recipe/DietaryTagRow';
+import { RecipeCardMini } from '../components/recipe/RecipeCardMini';
+import { Badge } from '../components/ui/Badge';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { useUserPreferences } from '../hooks/useUserPreferences';
+import { useUserStore } from '../stores/userStore';
+import { useRecipeStore } from '../stores/recipeStore';
+import { TOKENS } from '../lib/tokens';
 import { useRouter } from 'expo-router';
-import type { DietaryTag } from '../../types';
+import type { DietaryTag } from '../types';
 
 const ALL_TAGS: DietaryTag[] = [
   'vegan', 'vegetarian', 'gluten-free', 'dairy-free',
@@ -49,6 +49,45 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+      {/* Header with back button */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          accessibilityLabel="Go back"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            backgroundColor: TOKENS.colors.white,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: TOKENS.colors.borderLight,
+          }}
+        >
+          <ChevronLeft size={20} color={TOKENS.colors.text} />
+        </TouchableOpacity>
+        <Text
+          style={{
+            flex: 1,
+            textAlign: 'center',
+            fontSize: TOKENS.typography.sizes.lg,
+            fontWeight: TOKENS.typography.weights.semibold,
+            color: TOKENS.colors.text,
+            marginRight: 36,
+          }}
+        >
+          Profile
+        </Text>
+      </View>
+
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         <View style={{ padding: 20 }}>
           {/* Avatar */}
