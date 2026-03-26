@@ -19,13 +19,16 @@ app/
   _layout.tsx              # Root providers + nav shell
   (auth)/onboarding.tsx    # 4-step onboarding
   (tabs)/
-    _layout.tsx            # Bottom nav (CHANGING: 4 tabs → 3 tabs + AI sheet)
-    index.tsx              # CHANGING: was category grid → now priority cards
-    recipes.tsx            # KEEP: recipe collections (Spotify-style)
-    grocery.tsx            # KEEP: grocery list + ordering
-    profile.tsx            # SIMPLIFY: less settings, more "tell the AI"
+    _layout.tsx            # Bottom nav (4 tabs: Home, Kitchen, Agent, Grocery)
+    index.tsx              # Home — agentic priority cards (swipeable) + stats sections
+    kitchen.tsx            # Kitchen — pantry grid + recipe collections
+    chat.tsx               # Agent — 4 AI agent flows (Recipe Finder, Meal Planner, Smart Grocery, Savings Coach)
+    grocery.tsx            # Grocery list + aisle grouping + Instacart ordering
   recipe/[id].tsx          # Recipe detail
   import.tsx               # Social recipe import
+  profile.tsx              # User profile (stack screen, accessed from Kitchen header)
+  savings.tsx              # Savings analysis — stock-like graphs, monthly/all-time trends, activity log
+  connected-accounts.tsx   # Connected accounts settings
 ```
 
 ### State (Zustand stores in stores/)
@@ -36,6 +39,7 @@ app/
 | groceryStore | Grocery list, deduplication, store selection |
 | orderStore | Cart, order history, delivery addresses |
 | userStore | Profile, dietary prefs, connected accounts |
+| savingsStore | Savings tracking, waste log, weekly trends, monthly comparisons |
 
 ### Key Files
 - `lib/tokens.ts` — ALL design tokens. Single source of truth for colors, spacing, typography.
@@ -135,14 +139,14 @@ Show money saved prominently. This is our retention hook and viral loop.
 - Shareable savings card for social media
 
 ### Rule 6: Reduce Tabs, Increase AI
-**Current:** 4 tabs (Pantry, Recipes, Grocery, Profile)
-**Target:** 3 tabs (Home, Kitchen, Grocery) + floating AI chat button
+**Implemented:** 4 tabs (Home, Kitchen, Agent, Grocery)
 
-- Home = priority cards (agentic, proactive)
+- Home = priority cards (agentic, proactive) + stats sections (pantry, savings, expiring, quick actions)
 - Kitchen = pantry grid + recipe collections (combined)
-- Grocery = list + ordering (keep as-is, it works)
+- Agent = 4 AI agent flows (Recipe Finder, Meal Planner, Smart Grocery, Savings Coach)
+- Grocery = agentic list + aisle grouping + Instacart ordering
 - Profile = accessible from Kitchen screen header, not a tab
-- AI chat = bottom sheet, accessible everywhere via FAB
+- Savings analysis = accessible from Home "This month" section tap
 
 ---
 
@@ -153,7 +157,7 @@ Show money saved prominently. This is our retention hook and viral loop.
 2. NativeWind classes only. No inline `style={{}}` except dynamic runtime values.
 3. FlashList for every list. Never FlatList.
 4. @gorhom/bottom-sheet for every modal/sheet.
-5. Reanimated 3 for animations. Never legacy Animated API (except Animated.ScrollView for parallax).
+5. Reanimated 4 for animations. Never legacy Animated API (except Animated.ScrollView for parallax).
 6. Every screen has a skeleton loader (Moti-based).
 7. Every primary button fires `Haptics.impactAsync()`.
 8. Zod validates all forms. React Hook Form + @hookform/resolvers/zod.
@@ -191,17 +195,19 @@ Show money saved prominently. This is our retention hook and viral loop.
 - Zustand store architecture
 - All reusable UI primitives in components/ui/
 
-### REFACTOR (change the UX, keep the code structure)
-- `(tabs)/index.tsx`: Pantry category grid → Agentic priority cards (swipeable)
-- `(tabs)/_layout.tsx`: 4 tabs → 3 tabs + AI FAB
-- `(tabs)/recipes.tsx`: Move into Kitchen tab alongside pantry
-- `(tabs)/profile.tsx`: Remove as tab, make accessible from header icon
-
-### ADD (new features)
-- `components/ai/AIChatSheet.tsx` — Global AI bottom sheet
-- `components/home/PriorityCard.tsx` — Swipeable agentic cards
+### DONE (completed refactors)
+- `(tabs)/index.tsx`: Agentic priority cards (swipeable) + stats sections + quick actions
+- `(tabs)/_layout.tsx`: 4 tabs (Home, Kitchen, Agent, Grocery) with custom tab bar
+- `(tabs)/chat.tsx`: 4-agent selection screen with step-by-step agentic flows
+- `(tabs)/grocery.tsx`: Agentic grocery list with AI summary, aisle grouping, store picker
+- `(tabs)/kitchen.tsx`: Pantry grid + recipe collections (combined)
+- `profile.tsx`: Moved from tab to stack screen with back navigation
+- `savings.tsx`: Stock-like savings analysis graphs (monthly/all-time)
+- `components/home/PriorityCard.tsx` — Swipeable agentic cards (fixed height)
 - `components/home/SavingsCounter.tsx` — Animated savings display
 - `components/pantry/FreshnessBar.tsx` — Color-coded expiry indicator
+
+### ADD (remaining features)
 - `components/shared/ShareCard.tsx` — Shareable savings social card
 
 ### DO NOT TOUCH
@@ -227,7 +233,7 @@ Show money saved prominently. This is our retention hook and viral loop.
 
 ### Common Patterns in This Codebase
 - Bottom sheets: `const bottomSheetRef = useRef<BottomSheet>(null)` + snapPoints
-- Animations: `useAnimatedStyle` + `withSpring` / `withTiming` from Reanimated 3
+- Animations: `useAnimatedStyle` + `withSpring` / `withTiming` from Reanimated 4
 - Lists: `<FlashList data={items} renderItem={...} estimatedItemSize={80} />`
 - Forms: `useForm<SchemaType>({ resolver: zodResolver(schema) })`
 - Navigation: `router.push('/recipe/[id]')` via Expo Router

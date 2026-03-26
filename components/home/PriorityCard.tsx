@@ -65,6 +65,8 @@ interface PriorityCardProps {
 
 // ─── Shared card shell ───────────────────────────────────────
 
+const CARD_HEIGHT = 360;
+
 function CardShell({
   children,
   ctaLabel,
@@ -80,6 +82,7 @@ function CardShell({
         backgroundColor: TOKENS.colors.background,
         borderRadius: 16,
         padding: 24,
+        height: CARD_HEIGHT,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
@@ -87,10 +90,10 @@ function CardShell({
         elevation: 3,
       }}
     >
-      {children}
-      <View style={{ marginTop: 20 }}>
-        <Button label={ctaLabel} onPress={onCta} variant="primary" fullWidth />
+      <View style={{ flex: 1 }}>
+        {children}
       </View>
+      <Button label={ctaLabel} onPress={onCta} variant="primary" fullWidth />
     </View>
   );
 }

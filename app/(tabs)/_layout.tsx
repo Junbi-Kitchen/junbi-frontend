@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Home,
   ChefHat,
-  MessageCircle,
+  Bot,
   ShoppingCart,
 } from 'lucide-react-native';
 import { TOKENS } from '../../lib/tokens';
@@ -23,7 +23,7 @@ interface TabNav {
 const TABS = [
   { name: 'index', label: 'Home', icon: Home },
   { name: 'kitchen', label: 'Kitchen', icon: ChefHat },
-  { name: 'chat', label: 'Agent', icon: MessageCircle },
+  { name: 'chat', label: 'Agent', icon: Bot },
   { name: 'grocery', label: 'Grocery', icon: ShoppingCart },
 ];
 

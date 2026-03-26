@@ -151,10 +151,11 @@ gook-frontend/
 │   │   └── onboarding.tsx    # 4-step onboarding flow
 │   ├── (tabs)/
 │   │   ├── _layout.tsx       # Custom bottom tab bar (4 tabs)
-│   │   ├── index.tsx         # Home — agentic priority cards (swipeable)
+│   │   ├── index.tsx         # Home — agentic priority cards + stats sections
 │   │   ├── kitchen.tsx       # Kitchen — pantry grid + recipe collections
-│   │   ├── chat.tsx          # Agent — AI chat assistant
-│   │   └── grocery.tsx       # Grocery list + Instacart ordering
+│   │   ├── chat.tsx          # Agent — 4 AI agent flows (Recipe, Meal Plan, Grocery, Savings)
+│   │   └── grocery.tsx       # Grocery list + aisle grouping + Instacart ordering
+│   ├── savings.tsx           # Savings analysis — stock-like graphs + activity log
 │   └── recipe/
 │       └── [id].tsx          # Recipe detail (dynamic route)
 │
@@ -214,12 +215,19 @@ gook-frontend/
 
 | Tab | Screen | Description |
 |---|---|---|
-| Home | `index.tsx` | Agentic priority cards — expiring food alerts, meal plan, grocery summary, savings |
+| Home | `index.tsx` | Agentic priority cards + pantry stats, savings summary, expiring items, quick actions |
 | Kitchen | `kitchen.tsx` | Pantry grid with freshness bars + recipe collections (segmented control) |
-| Agent | `chat.tsx` | AI chat assistant — meal planning, recipe suggestions, grocery management |
-| Grocery | `grocery.tsx` | Grocery list with aisle/recipe grouping, store picker, Instacart ordering |
+| Agent | `chat.tsx` | 4 AI agent flows — Recipe Finder, Meal Planner, Smart Grocery, Savings Coach |
+| Grocery | `grocery.tsx` | Agentic grocery list with AI summary, aisle grouping, store picker, Instacart ordering |
 
-Profile is accessible from the Kitchen screen header icon and opens as a stack screen with back navigation.
+### Additional Screens
+
+| Screen | File | Access |
+|---|---|---|
+| Savings Analysis | `savings.tsx` | Tap "This month" section on Home — stock-like graphs, monthly/all-time trends, activity log |
+| Profile | `profile.tsx` | Kitchen screen header icon — stack screen with back navigation |
+| Recipe Detail | `recipe/[id].tsx` | Tap any recipe card |
+| Recipe Import | `import.tsx` | Quick action on Home or Kitchen |
 
 ---
 

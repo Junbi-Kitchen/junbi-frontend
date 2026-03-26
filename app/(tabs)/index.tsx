@@ -4,6 +4,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
+  TouchableOpacity,
   Dimensions,
   RefreshControl,
 } from 'react-native';
@@ -16,6 +17,7 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { ChevronRight } from 'lucide-react-native';
 import { usePantry } from '../../hooks/usePantry';
 import { useGroceryStore } from '../../stores/groceryStore';
 import { useRecipeStore } from '../../stores/recipeStore';
@@ -248,33 +250,121 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Pantry summary strip */}
+        {/* ─── Pantry at a glance ──────────────────── */}
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
-          <Text
-            style={{
-              fontSize: TOKENS.typography.sizes.xs,
-              fontWeight: TOKENS.typography.weights.semibold,
-              color: TOKENS.colors.textMuted,
-              textTransform: 'uppercase',
-              letterSpacing: 0.8,
-              marginBottom: 12,
-            }}
-          >
-            Pantry at a glance
-          </Text>
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: 12,
-            }}
-          >
+          <SectionLabel text="Pantry at a glance" />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
             <StatBox label="Items" value={`${items.length}`} />
             <StatBox
               label="Expiring soon"
               value={`${expiringItems.length}`}
               valueColor={expiringItems.length > 0 ? TOKENS.colors.warning : undefined}
             />
-            <StatBox label="Recipes saved" value={`${recipes.length}`} />
+            <StatBox label="Recipes" value={`${recipes.length}`} />
+          </View>
+        </View>
+
+        {/* ─── Weekly savings ────────────────────────── */}
+        <TouchableOpacity
+          onPress={() => router.push('/savings')}
+          accessibilityLabel="View savings analysis"
+          activeOpacity={0.7}
+          style={{ paddingHorizontal: 20, marginTop: 24 }}
+        >
+          <SectionLabel text="This month" action="See analysis" />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <StatBox
+              label="Saved"
+              value={`$${savings.totalSavedThisMonth.toFixed(0)}`}
+              valueColor={TOKENS.colors.accent}
+            />
+            <StatBox
+              label="Wasted"
+              value={`$${savings.totalWastedThisMonth.toFixed(0)}`}
+              valueColor={savings.totalWastedThisMonth > 0 ? TOKENS.colors.error : undefined}
+            />
+            <StatBox
+              label="All time"
+              value={`$${savings.totalSavedAllTime.toFixed(0)}`}
+              valueColor={TOKENS.colors.primary}
+            />
+          </View>
+        </TouchableOpacity>
+
+        {/* ─── Expiring items list ───────────────────── */}
+        {expiringItems.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+            <SectionLabel text="Use these first" />
+            <View
+              style={{
+                backgroundColor: TOKENS.colors.white,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: TOKENS.colors.borderLight,
+                overflow: 'hidden',
+              }}
+            >
+              {expiringItems.slice(0, 4).map((item, idx) => {
+                const days = getDaysUntilExpiry(item.expiryDate ?? '');
+                return (
+                  <View
+                    key={item.id}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      borderBottomWidth: idx < Math.min(expiringItems.length, 4) - 1 ? 1 : 0,
+                      borderBottomColor: TOKENS.colors.borderLight,
+                    }}
+                  >
+                    <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: TOKENS.colors.text }}>
+                      {item.name}
+                    </Text>
+                    <View
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: 999,
+                        backgroundColor: days <= 2 ? TOKENS.colors.errorLight : TOKENS.colors.warningLight,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          fontWeight: '600',
+                          color: days <= 2 ? TOKENS.colors.error : TOKENS.colors.warning,
+                        }}
+                      >
+                        {days <= 0 ? 'Today' : `${days}d left`}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* ─── Quick actions ─────────────────────────── */}
+        <View style={{ paddingHorizontal: 20, marginTop: 24, marginBottom: 8 }}>
+          <SectionLabel text="Quick actions" />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <QuickAction
+              label="Scan receipt"
+              icon="📷"
+              onPress={() => router.push('/(tabs)/kitchen')}
+            />
+            <QuickAction
+              label="Import recipe"
+              icon="📲"
+              onPress={() => router.push('/import')}
+            />
+            <QuickAction
+              label="Ask agent"
+              icon="🤖"
+              onPress={() => router.push('/(tabs)/chat')}
+            />
           </View>
         </View>
       </Animated.ScrollView>
@@ -331,6 +421,40 @@ function PaginationDot({
   );
 }
 
+// ─── Section label ──────────────────────────────────────────
+
+function SectionLabel({ text, action }: { text: string; action?: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <Text
+        style={{
+          fontSize: TOKENS.typography.sizes.xs,
+          fontWeight: TOKENS.typography.weights.semibold,
+          color: TOKENS.colors.textMuted,
+          textTransform: 'uppercase',
+          letterSpacing: 0.8,
+        }}
+      >
+        {text}
+      </Text>
+      {action && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: '500',
+              color: TOKENS.colors.primary,
+            }}
+          >
+            {action}
+          </Text>
+          <ChevronRight size={14} color={TOKENS.colors.primary} />
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ─── Stat box ────────────────────────────────────────────────
 
 function StatBox({
@@ -372,5 +496,45 @@ function StatBox({
         {label}
       </Text>
     </View>
+  );
+}
+
+// ─── Quick action button ────────────────────────────────────
+
+function QuickAction({
+  label,
+  icon,
+  onPress,
+}: {
+  label: string;
+  icon: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityLabel={label}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: TOKENS.colors.white,
+        borderRadius: 14,
+        paddingVertical: 16,
+        borderWidth: 1,
+        borderColor: TOKENS.colors.borderLight,
+      }}
+    >
+      <Text style={{ fontSize: 22 }}>{icon}</Text>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '500',
+          color: TOKENS.colors.textSecondary,
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
   );
 }

@@ -40,7 +40,13 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" statusBarTranslucent>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      statusBarTranslucent
+      onRequestClose={() => { cancelScan(); onClose(); }}
+    >
       <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
         {/* Header */}
         <View
@@ -58,8 +64,17 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
           <TouchableOpacity
             onPress={() => { cancelScan(); onClose(); }}
             accessibilityLabel="Close scanner"
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <X size={24} color="#fff" />
+            <X size={20} color="#fff" />
           </TouchableOpacity>
         </View>
 
