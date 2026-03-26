@@ -15,9 +15,7 @@ import Animated, {
   withRepeat,
   withTiming,
   withDelay,
-  withSpring,
   Easing,
-  FadeIn,
   FadeInDown,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -524,115 +522,8 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
     ...recipes.filter((r) => !matched.some((m) => m.id === r.id)).slice(0, 3 - matched.length),
   ];
 
-  if (step === 0) {
-    return (
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-        <StepIndicator current={0} total={3} />
-
-        <AiBubble
-          text={urgent.length > 0
-            ? `You have ${urgent.length} items expiring soon. Which ones do you want to cook with?`
-            : "Let me know what ingredients you want to use and I'll find the perfect recipe."
-          }
-        />
-
-        {/* Ingredient chips */}
-        {urgent.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-              {urgent.map((item) => {
-                const days = getDaysUntilExpiry(item.expiryDate ?? '');
-                const isSelected = selectedIngredients.includes(item.name);
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    onPress={() => toggleIngredient(item.name)}
-                    accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.name}`}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 6,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      backgroundColor: isSelected ? TOKENS.colors.primaryMuted : TOKENS.colors.white,
-                      borderWidth: 1,
-                      borderColor: isSelected ? TOKENS.colors.primary : TOKENS.colors.borderLight,
-                    }}
-                  >
-                    {isSelected && <Check size={14} color={TOKENS.colors.primary} />}
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: isSelected ? '600' : '400',
-                        color: isSelected ? TOKENS.colors.primary : TOKENS.colors.text,
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        color: days <= 2 ? TOKENS.colors.error : TOKENS.colors.warning,
-                      }}
-                    >
-                      {days}d
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </Animated.View>
-        )}
-
-        {/* Also show other pantry items */}
-        {items.filter((i) => !urgent.some((u) => u.id === i.id)).length > 0 && (
-          <Animated.View entering={FadeInDown.delay(300).springify()}>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
-              Other ingredients
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
-              {items.filter((i) => !urgent.some((u) => u.id === i.id)).slice(0, 8).map((item) => {
-                const isSelected = selectedIngredients.includes(item.name);
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    onPress={() => toggleIngredient(item.name)}
-                    accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.name}`}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      backgroundColor: isSelected ? TOKENS.colors.primaryMuted : TOKENS.colors.white,
-                      borderWidth: 1,
-                      borderColor: isSelected ? TOKENS.colors.primary : TOKENS.colors.borderLight,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: isSelected ? '600' : '400',
-                        color: isSelected ? TOKENS.colors.primary : TOKENS.colors.text,
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </Animated.View>
-        )}
-
-        <CtaButton
-          label={selectedIngredients.length > 0 ? `Find recipes with ${selectedIngredients.length} items` : 'Find any recipe'}
-          onPress={handleFindRecipes}
-        />
-      </ScrollView>
-    );
-  }
-
-  if (step === 0 && isThinking) {
+  // Thinking state
+  if (isThinking) {
     return (
       <View style={{ flex: 1, padding: 20 }}>
         <StepIndicator current={1} total={3} />
@@ -642,8 +533,8 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
     );
   }
 
-  // Step 1+ (after finding recipes) — show if showResults or step >= 1
-  if (showResults || step >= 1) {
+  // Results state
+  if (showResults) {
     return (
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={1} total={3} />
@@ -703,7 +594,112 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
     );
   }
 
-  return null;
+  // Default: ingredient selection
+  return (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
+      <StepIndicator current={0} total={3} />
+
+      <AiBubble
+        text={urgent.length > 0
+          ? `You have ${urgent.length} items expiring soon. Which ones do you want to cook with?`
+          : "Let me know what ingredients you want to use and I'll find the perfect recipe."
+        }
+      />
+
+      {/* Expiring ingredient chips */}
+      {urgent.length > 0 && (
+        <Animated.View entering={FadeInDown.delay(200).springify()}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+            {urgent.map((item) => {
+              const days = getDaysUntilExpiry(item.expiryDate ?? '');
+              const isSelected = selectedIngredients.includes(item.name);
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => toggleIngredient(item.name)}
+                  accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.name}`}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                    backgroundColor: isSelected ? TOKENS.colors.primaryMuted : TOKENS.colors.white,
+                    borderWidth: 1,
+                    borderColor: isSelected ? TOKENS.colors.primary : TOKENS.colors.borderLight,
+                  }}
+                >
+                  {isSelected && <Check size={14} color={TOKENS.colors.primary} />}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: isSelected ? '600' : '400',
+                      color: isSelected ? TOKENS.colors.primary : TOKENS.colors.text,
+                    }}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: days <= 2 ? TOKENS.colors.error : TOKENS.colors.warning,
+                    }}
+                  >
+                    {days}d
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Animated.View>
+      )}
+
+      {/* Other pantry items */}
+      {items.filter((i) => !urgent.some((u) => u.id === i.id)).length > 0 && (
+        <Animated.View entering={FadeInDown.delay(300).springify()}>
+          <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+            Other ingredients
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+            {items.filter((i) => !urgent.some((u) => u.id === i.id)).slice(0, 8).map((item) => {
+              const isSelected = selectedIngredients.includes(item.name);
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => toggleIngredient(item.name)}
+                  accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.name}`}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                    backgroundColor: isSelected ? TOKENS.colors.primaryMuted : TOKENS.colors.white,
+                    borderWidth: 1,
+                    borderColor: isSelected ? TOKENS.colors.primary : TOKENS.colors.borderLight,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: isSelected ? '600' : '400',
+                      color: isSelected ? TOKENS.colors.primary : TOKENS.colors.text,
+                    }}
+                  >
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Animated.View>
+      )}
+
+      <CtaButton
+        label={selectedIngredients.length > 0 ? `Find recipes with ${selectedIngredients.length} items` : 'Find any recipe'}
+        onPress={handleFindRecipes}
+      />
+    </ScrollView>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════
