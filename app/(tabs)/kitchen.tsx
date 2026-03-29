@@ -79,7 +79,7 @@ export default function KitchenScreen() {
   const manualAddRef = useRef<BottomSheet>(null);
   const newCollectionRef = useRef<BottomSheet>(null);
 
-  const { items, removeItem } = usePantry();
+  const { items, logAction } = usePantry();
   const { logUsed, logTossed } = useSavingsStore();
   const {
     saved,
@@ -113,21 +113,21 @@ export default function KitchenScreen() {
   const handleMarkUsed = async () => {
     if (!selectedItem) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const savedAmount = logUsed(selectedItem.name, selectedItem.category);
-    removeItem(selectedItem.id);
     setSelectedItem(null);
     itemSheetRef.current?.close();
-    setToastAmount(savedAmount);
+    const result = await logAction(selectedItem.id, 'used');
+    logUsed(selectedItem.name, result.estimatedValue);
+    setToastAmount(result.estimatedValue);
     setToastVisible(true);
   };
 
   const handleTossed = async () => {
     if (!selectedItem) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    logTossed(selectedItem.name, selectedItem.category);
-    removeItem(selectedItem.id);
     setSelectedItem(null);
     itemSheetRef.current?.close();
+    const result = await logAction(selectedItem.id, 'tossed');
+    logTossed(selectedItem.name, result.estimatedValue);
   };
 
   // ─── Skeleton ─────────────────────────────────────────────

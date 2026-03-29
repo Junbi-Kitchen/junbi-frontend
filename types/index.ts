@@ -85,6 +85,7 @@ export interface PantryItem extends Ingredient {
   expiryDate?: string;
   addedAt: string;
   addedVia: 'receipt' | 'manual' | 'scan';
+  freshnessStatus?: 'fresh' | 'use_soon' | 'expiring' | 'expired' | 'staple';
 }
 
 export interface GroceryItem {

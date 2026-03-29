@@ -4,7 +4,7 @@ import React, { createContext, useContext, useRef } from 'react';
 import type BottomSheet from '@gorhom/bottom-sheet';
 
 interface AIChatContextValue {
-  sheetRef: React.RefObject<BottomSheet>;
+  sheetRef: React.RefObject<BottomSheet | null>;
   openChat: () => void;
 }
 

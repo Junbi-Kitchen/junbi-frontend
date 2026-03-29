@@ -2,25 +2,53 @@
 
 import { create } from 'zustand';
 import type { Order, Store, GroceryItem, OrderStatus } from '../types';
-import { MOCK_ORDER, MOCK_STORES } from '../lib/mockData';
+import { ordersApi } from '../lib/api/orders';
+import { storesApi } from '../lib/api/stores';
 
 interface OrderStore {
   activeOrder: Order | null;
   history: Order[];
+  stores: Store[];
   selectedStore: Store | null;
   cart: GroceryItem[];
+  isLoading: boolean;
+  fetchStores: () => Promise<void>;
+  fetchActiveOrder: () => Promise<void>;
+  fetchHistory: () => Promise<void>;
   selectStore: (store: Store) => void;
   buildCart: (items: GroceryItem[]) => void;
-  placeOrder: () => void;
+  placeOrder: () => Promise<void>;
   updateOrderStatus: (status: OrderStatus) => void;
   completeOrder: () => void;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
-  activeOrder: MOCK_ORDER,
+  activeOrder: null,
   history: [],
-  selectedStore: MOCK_STORES[0],
+  stores: [],
+  selectedStore: null,
   cart: [],
+  isLoading: false,
+
+  fetchStores: async () => {
+    const stores = await storesApi.getAll();
+    set({ stores, selectedStore: stores[0] ?? null });
+  },
+
+  fetchActiveOrder: async () => {
+    set({ isLoading: true });
+    try {
+      const order = await ordersApi.getActive();
+      set({ activeOrder: order });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchHistory: async () => {
+    const data = await ordersApi.getHistory({ limit: 20 });
+    set({ history: data.orders });
+  },
 
   selectStore: (store) => {
     set({ selectedStore: store });
@@ -30,34 +58,25 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ cart: items.filter((i) => !i.checked) });
   },
 
-  placeOrder: () => {
-    const { cart, selectedStore } = get();
+  placeOrder: async () => {
+    const { cart, selectedStore, activeOrder, history } = get();
     if (!selectedStore || cart.length === 0) return;
 
-    const order: Order = {
-      id: `o-${Date.now()}`,
-      store: selectedStore,
-      items: cart,
-      status: 'placed',
-      estimatedPickup: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      subtotal: cart.length * 4.99,
-      placedAt: new Date().toISOString(),
-    };
+    const order = await ordersApi.place(
+      selectedStore.id,
+      cart.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit }))
+    );
 
-    set((state) => ({
+    set({
       activeOrder: order,
-      history: state.activeOrder
-        ? [state.activeOrder, ...state.history]
-        : state.history,
+      history: activeOrder ? [activeOrder, ...history] : history,
       cart: [],
-    }));
+    });
   },
 
   updateOrderStatus: (status) => {
     set((state) => ({
-      activeOrder: state.activeOrder
-        ? { ...state.activeOrder, status }
-        : null,
+      activeOrder: state.activeOrder ? { ...state.activeOrder, status } : null,
     }));
   },
 
