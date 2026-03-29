@@ -14,6 +14,8 @@ const SKIP_PHRASES = [
   /\bvisit\s+us\b/i,  /\bfollow\s+us\b/i,   /\bcashier\b/i,
   /\bterminal\b/i,    /\breg\s*#/i,          /\btrans\s*#/i,
   /\bauth\b/i,        /\bapproval\b/i,
+  // Payment/tender lines that aren't caught by extractSummary
+  /\bbalance\s+due\b/i, /\btendered\b/i, /\bchange\b/i, /\bpayment\b/i,
 ];
 
 const DISCOUNT_PHRASES = [
@@ -262,32 +264,34 @@ export function parseReceipt(rawText: string): ScanResponse {
 
   const items: ReceiptItem[] = [];
   const unparsed: string[] = [];
-  let pendingDiscount: { line: string; amount: number | null } | null = null;
 
   for (const line of r2lines) {
     if (shouldSkip(line)) continue;
 
     const isDiscount = DISCOUNT_PHRASES.some(p => p.test(line)) || /^-\s*\$?\d/.test(line);
-    if (isDiscount) { pendingDiscount = { line, amount: parsePrice(line) }; continue; }
+    if (isDiscount) {
+      // Attach to the last matched item (look-back)
+      if (items.length > 0) {
+        const last = items[items.length - 1];
+        const amount = parsePrice(line);
+        items[items.length - 1] = {
+          ...last,
+          on_sale: true,
+          parsing_notes: last.parsing_notes
+            ? `${last.parsing_notes}; discount ${amount}`
+            : `discount ${amount}`,
+        };
+      }
+      continue;
+    }
 
     const raw = matchLine(line);
-    if (!raw) { unparsed.push(line); pendingDiscount = null; continue; }
+    if (!raw) { unparsed.push(line); continue; }
 
     const { brand, cleanName: afterBrand } = resolveBrand(raw.name);
     const { variant, cleanName } = resolveVariant(afterBrand);
     const { category, subcategory } = resolveCategory(cleanName || raw.name);
 
-    let on_sale = raw.on_sale;
-    let parsing_notes = raw.parsing_notes;
-    if (pendingDiscount) {
-      on_sale = true;
-      parsing_notes = parsing_notes
-        ? `${parsing_notes}; discount ${pendingDiscount.amount}`
-        : `discount ${pendingDiscount.amount}`;
-      pendingDiscount = null;
-    }
-
-    const enriched = { ...raw, brand, on_sale, parsing_notes };
     items.push({
       name: cleanName || raw.name,
       brand,
@@ -298,9 +302,9 @@ export function parseReceipt(rawText: string): ScanResponse {
       total_price: raw.total_price,
       category,
       subcategory,
-      on_sale,
-      confidence: resolveConfidence(enriched),
-      parsing_notes,
+      on_sale: raw.on_sale,
+      confidence: resolveConfidence({ ...raw, brand }),
+      parsing_notes: raw.parsing_notes,
       raw_line: raw.raw_line,
     });
   }
