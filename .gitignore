@@ -5,7 +5,12 @@ node_modules
 
 expo-env.d.ts
 # @end expo-cli
-
+.expo/
 # Secrets and Environment Variables
 .env
 .env*.local
+
+# Superpowers / Claude tooling (not for production)
+docs/superpowers/
+
+assets/test-receipt.jpg
