@@ -39,6 +39,8 @@ export default function RootLayout() {
               <Stack.Screen name="connected-accounts" />
               <Stack.Screen name="profile" />
               <Stack.Screen name="savings" />
+              <Stack.Screen name="receipt-scanner" />
+              <Stack.Screen name="receipt-result" />
             </Stack>
             <StatusBar style="dark" />
           </BottomSheetModalProvider>
