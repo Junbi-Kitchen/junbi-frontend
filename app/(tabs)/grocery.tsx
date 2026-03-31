@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import BottomSheet from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
@@ -21,6 +22,7 @@ import {
   Store as StoreIcon,
   ChevronDown,
   Package,
+  ScanLine,
 } from 'lucide-react-native';
 import { BottomSheetWrapper } from '../../components/ui/BottomSheetWrapper';
 import { StorePickerSheet } from '../../components/grocery/StorePickerSheet';
@@ -43,6 +45,7 @@ export default function GroceryScreen() {
   const { selectedStore, selectStore } = useOrders();
   const { getDefaultAddress } = useUserStore();
   const defaultAddress = getDefaultAddress();
+  const router = useRouter();
 
   // Split into unchecked and checked
   const uncheckedItems = useMemo(() => items.filter((i) => !i.checked), [items]);
@@ -100,7 +103,7 @@ export default function GroceryScreen() {
         contentContainerStyle={{ paddingBottom: totalItems > 0 ? 100 : 8 }}
       >
         {/* Header */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text
             style={{
               fontSize: TOKENS.typography.sizes['2xl'],
@@ -110,6 +113,14 @@ export default function GroceryScreen() {
           >
             Grocery
           </Text>
+          <TouchableOpacity
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/receipt-scanner'); }}
+            accessibilityLabel="Scan a receipt"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: TOKENS.colors.primaryMuted, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 }}
+          >
+            <ScanLine size={16} color={TOKENS.colors.primary} />
+            <Text style={{ fontSize: 13, fontWeight: '600', color: TOKENS.colors.primary }}>Scan Receipt</Text>
+          </TouchableOpacity>
         </View>
 
         {totalItems === 0 ? (
