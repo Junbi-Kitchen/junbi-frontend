@@ -34,6 +34,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { FreshnessBar } from '../../components/pantry/FreshnessBar';
+import { PantrySection } from '../../components/pantry/PantrySection';
 import { ManualAddSheet } from '../../components/pantry/ManualAddSheet';
 import { ReceiptScanModal } from '../../components/pantry/ReceiptScanModal';
 import { SavedToast } from '../../components/shared/SavedToast';
@@ -79,7 +80,7 @@ export default function KitchenScreen() {
   const manualAddRef = useRef<BottomSheet>(null);
   const newCollectionRef = useRef<BottomSheet>(null);
 
-  const { items, logAction } = usePantry();
+  const { items, logAction, updateQuantity, removeItem } = usePantry();
   const { logUsed, logTossed } = useSavingsStore();
   const {
     saved,
@@ -318,80 +319,27 @@ export default function KitchenScreen() {
               })}
             </ScrollView>
 
-            {/* Pantry grid */}
-            {filteredItems.length > 0 ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  paddingHorizontal: 20,
-                  gap: 10,
-                }}
-              >
-                {filteredItems.map((item) => {
-                  const days = item.expiryDate ? getDaysUntilExpiry(item.expiryDate) : null;
-                  return (
-                    <TouchableOpacity
-                      key={item.id}
-                      onPress={() => handleItemTap(item)}
-                      accessibilityLabel={`${item.name}, ${item.quantity} ${item.unit}${days !== null ? `, expires in ${days} days` : ''}. Tap for options.`}
-                      style={{
-                        width: PANTRY_CARD_WIDTH,
-                        backgroundColor: TOKENS.colors.white,
-                        borderRadius: 14,
-                        overflow: 'hidden',
-                        borderWidth: 1,
-                        borderColor: TOKENS.colors.borderLight,
-                      }}
-                    >
-                      {/* Emoji/icon area */}
-                      <View
-                        style={{
-                          height: 64,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: TOKENS.colors.inputBg,
-                        }}
-                      >
-                        <Text style={{ fontSize: 28 }}>
-                          {getItemEmoji(item.category)}
-                        </Text>
-                      </View>
-                      <View style={{ padding: 10 }}>
-                        <Text
-                          numberOfLines={1}
-                          style={{
-                            fontSize: 12,
-                            fontWeight: '600',
-                            color: TOKENS.colors.text,
-                          }}
-                        >
-                          {item.name}
-                        </Text>
-                        {days !== null && (
-                          <Text
-                            style={{
-                              fontSize: 10,
-                              color: days <= 2
-                                ? TOKENS.colors.error
-                                : days <= 6
-                                  ? TOKENS.colors.warning
-                                  : TOKENS.colors.textSecondary,
-                              marginTop: 3,
-                            }}
-                          >
-                            {days <= 0 ? 'Expired' : `${days}d left`}
-                          </Text>
-                        )}
-                      </View>
-                      <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
-                        <FreshnessBar expiryDate={item.expiryDate} />
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            ) : (
+            {/* Pantry sections grouped by category */}
+            {filteredItems.length > 0 ? (() => {
+              const grouped = filteredItems.reduce<Record<string, PantryItem[]>>((acc, item) => {
+                if (!acc[item.category]) acc[item.category] = [];
+                acc[item.category].push(item);
+                return acc;
+              }, {});
+              return (
+                <View>
+                  {(Object.keys(grouped) as IngredientCategory[]).map((cat) => (
+                    <PantrySection
+                      key={cat}
+                      category={cat}
+                      items={grouped[cat]}
+                      onUpdateQuantity={(id, qty) => updateQuantity(id, qty)}
+                      onDelete={(id) => removeItem(id)}
+                    />
+                  ))}
+                </View>
+              );
+            })() : (
               <EmptyState
                 icon={ChefHat}
                 title="Your kitchen is empty!"
@@ -792,7 +740,7 @@ export default function KitchenScreen() {
       </BottomSheetWrapper>
 
       {/* Manual add sheet */}
-      <BottomSheetWrapper sheetRef={manualAddRef} snapPoints={['80%']} initialIndex={-1}>
+      <BottomSheetWrapper sheetRef={manualAddRef} snapPoints={['80%']} initialIndex={-1} keyboardBehavior="interactive">
         <ManualAddSheet onClose={() => manualAddRef.current?.close()} />
       </BottomSheetWrapper>
 

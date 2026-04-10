@@ -40,10 +40,10 @@ export function Input({
         className={cn(
           'flex-row items-center rounded-xl bg-[#F5F5F0] px-4',
           multiline ? 'py-3 items-start' : 'h-12',
-          focused && 'ring-2 ring-[#2D6A4F]',
           error && 'border border-[#E63946]',
           !editable && 'opacity-60'
         )}
+        style={focused ? { borderWidth: 2, borderColor: '#2D6A4F' } : undefined}
       >
         {leftIcon && <View className="mr-2">{leftIcon}</View>}
         <TextInput

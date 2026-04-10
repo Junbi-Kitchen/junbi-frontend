@@ -7,6 +7,8 @@ type AddItemInput = Pick<PantryItem, 'name' | 'quantity' | 'unit' | 'category'> 
 };
 
 export const pantryApi = {
+  searchIngredients: (q: string) =>
+    api.get<{ name: string; category: string }[]>(`/pantry/ingredients/search?q=${encodeURIComponent(q)}`),
   getAll: () => api.get<PantryItem[]>('/pantry'),
   add: (item: AddItemInput) => api.post<PantryItem>('/pantry', item),
   update: (id: string, updates: Partial<AddItemInput>) =>

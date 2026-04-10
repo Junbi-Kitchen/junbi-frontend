@@ -7,6 +7,7 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
   type BottomSheetBackdropProps,
+  type BottomSheetProps,
 } from '@gorhom/bottom-sheet';
 
 interface BottomSheetWrapperProps {
@@ -15,6 +16,7 @@ interface BottomSheetWrapperProps {
   onClose?: () => void;
   initialIndex?: number;
   sheetRef?: React.RefObject<BottomSheet | null>;
+  keyboardBehavior?: BottomSheetProps['keyboardBehavior'];
 }
 
 export function BottomSheetWrapper({
@@ -23,6 +25,7 @@ export function BottomSheetWrapper({
   onClose,
   initialIndex = 0,
   sheetRef,
+  keyboardBehavior,
 }: BottomSheetWrapperProps) {
   const internalRef = useRef<BottomSheet>(null);
   const ref = sheetRef ?? internalRef;
@@ -46,6 +49,7 @@ export function BottomSheetWrapper({
       snapPoints={snapPoints}
       onClose={onClose}
       backdropComponent={renderBackdrop}
+      keyboardBehavior={keyboardBehavior}
       enablePanDownToClose
       backgroundStyle={{ backgroundColor: TOKENS.colors.white }}
       handleIndicatorStyle={{ backgroundColor: TOKENS.colors.border, width: 40 }}

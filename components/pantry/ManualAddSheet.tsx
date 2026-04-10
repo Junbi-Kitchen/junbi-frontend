@@ -1,20 +1,18 @@
-// Purpose: Bottom sheet for manually adding pantry items with search, quantity, and expiry
+// Purpose: Bottom sheet for manually adding pantry items with ingredient search and quantity
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Input } from '../ui/Input';
 import { StepperInput } from '../ui/StepperInput';
 import { Button } from '../ui/Button';
 import { TOKENS } from '../../lib/tokens';
 import { usePantry } from '../../hooks/usePantry';
-import { MOCK_PANTRY } from '../../lib/mockData';
-import type { IngredientCategory, PantryItem } from '../../types';
-
-const COMMON_INGREDIENTS = [
-  ...new Map(MOCK_PANTRY.map((i) => [i.name, i])).values(),
-];
+import { pantryApi } from '../../lib/api/pantry';
+import type { IngredientCategory } from '../../types';
 
 const UNITS = ['g', 'ml', 'whole', 'cup', 'tbsp', 'tsp', 'oz', 'lb', 'bunch', 'pack'];
+
+interface Suggestion { name: string; category: string }
 
 interface ManualAddSheetProps {
   onClose: () => void;
@@ -23,42 +21,54 @@ interface ManualAddSheetProps {
 export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
   const { addItem } = usePantry();
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Suggestion | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [unit, setUnit] = useState('g');
+  const [unit, setUnit] = useState('whole');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filtered = COMMON_INGREDIENTS.filter((i) =>
-    i.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!search.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await pantryApi.searchIngredients(search.trim());
+        setSuggestions(results);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  }, [search]);
 
-  const handleAdd = () => {
-    if (!selected) return;
-    const base = COMMON_INGREDIENTS.find((i) => i.name === selected);
-    if (!base) return;
+  const handleSelect = (suggestion: Suggestion) => {
+    setSelected(suggestion);
+    setSearch(suggestion.name);
+    setSuggestions([]);
+  };
 
-    const newItem: PantryItem = {
-      id: `manual-${Date.now()}`,
-      name: base.name,
-      quantity,
-      unit,
-      category: base.category as IngredientCategory,
-      addedAt: new Date().toISOString(),
-      addedVia: 'manual',
-    };
-    addItem(newItem);
+  const handleAdd = async () => {
+    const name = selected?.name || search.trim();
+    if (!name) return;
+    const category = (selected?.category as IngredientCategory) || 'pantry';
+    await addItem({ name, quantity, unit, category, addedVia: 'manual' });
     setSearch('');
     setSelected(null);
     setQuantity(1);
-    setUnit('g');
+    setUnit('whole');
     onClose();
   };
 
+  const canAdd = search.trim().length > 0;
+
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 8 }}>
+    <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 8 }}>
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xl,
@@ -71,55 +81,51 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
         </Text>
 
         <Input
-          placeholder="Search ingredients..."
+          placeholder="Search or type an ingredient..."
           value={search}
-          onChangeText={setSearch}
+          onChangeText={(t) => { setSearch(t); setSelected(null); }}
         />
 
-        {/* Ingredient list */}
-        <ScrollView
-          style={{ flex: 1, marginTop: 12 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {filtered.map((item) => (
-            <TouchableOpacity
-              key={item.name}
-              onPress={() => setSelected(item.name)}
-              accessibilityLabel={`Select ${item.name}`}
-              style={{
-                paddingVertical: 12,
-                paddingHorizontal: 8,
-                borderRadius: 10,
-                backgroundColor:
-                  selected === item.name
-                    ? TOKENS.colors.primaryMuted
-                    : 'transparent',
-                marginBottom: 2,
-              }}
-            >
-              <Text
+        {/* Suggestions dropdown */}
+        {isSearching && (
+          <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+            <ActivityIndicator size="small" color={TOKENS.colors.primary} />
+          </View>
+        )}
+
+        {suggestions.length > 0 && (
+          <ScrollView
+            style={{ maxHeight: 200, marginTop: 4 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {suggestions.map((item) => (
+              <TouchableOpacity
+                key={item.name}
+                onPress={() => handleSelect(item)}
+                accessibilityLabel={`Select ${item.name}`}
                 style={{
-                  fontSize: TOKENS.typography.sizes.md,
-                  color:
-                    selected === item.name
-                      ? TOKENS.colors.primary
-                      : TOKENS.colors.text,
-                  fontWeight:
-                    selected === item.name
-                      ? TOKENS.typography.weights.semibold
-                      : TOKENS.typography.weights.regular,
+                  paddingVertical: 12,
+                  paddingHorizontal: 8,
+                  borderRadius: 10,
+                  borderBottomWidth: 1,
+                  borderBottomColor: TOKENS.colors.border,
                 }}
               >
-                {item.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text style={{ fontSize: TOKENS.typography.sizes.md, color: TOKENS.colors.text }}>
+                  {item.name}
+                </Text>
+                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary, textTransform: 'capitalize' }}>
+                  {item.category}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
-        {/* Quantity & unit — only when selected */}
-        {selected && (
-          <View style={{ paddingTop: 12, borderTopWidth: 1, borderTopColor: TOKENS.colors.borderLight }}>
+        {/* Quantity & unit — shown once user has typed/selected something */}
+        {canAdd && (
+          <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: TOKENS.colors.border, marginTop: 8 }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -141,7 +147,6 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
               <StepperInput value={quantity} onChange={setQuantity} min={1} max={999} />
             </View>
 
-            {/* Unit picker */}
             <Text
               style={{
                 fontSize: TOKENS.typography.sizes.sm,
@@ -167,18 +172,14 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
                     paddingHorizontal: 14,
                     paddingVertical: 8,
                     borderRadius: 999,
-                    backgroundColor:
-                      unit === u ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+                    backgroundColor: unit === u ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
                   }}
                 >
                   <Text
                     style={{
                       fontSize: 13,
                       fontWeight: '500',
-                      color:
-                        unit === u
-                          ? TOKENS.colors.primary
-                          : TOKENS.colors.textSecondary,
+                      color: unit === u ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
                     }}
                   >
                     {u}
@@ -189,17 +190,17 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
           </View>
         )}
 
-        {/* Sticky bottom button */}
+        <View style={{ flex: 1 }} />
+
         <View style={{ paddingTop: 16, paddingBottom: 24 }}>
           <Button
             label="Add to Pantry"
             onPress={handleAdd}
             variant="primary"
-            disabled={!selected}
+            disabled={!canAdd}
             fullWidth
           />
         </View>
-      </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
