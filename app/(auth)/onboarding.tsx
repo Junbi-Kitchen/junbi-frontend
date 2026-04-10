@@ -1,4 +1,4 @@
-// Purpose: 4-step onboarding flow with animated progress bar and preference setup
+// Purpose: 5-step onboarding flow with animated progress bar, preference setup, and account creation
 
 import React, { useState } from 'react';
 import {
@@ -6,6 +6,8 @@ import {
   Text,
   TouchableOpacity,
   Switch,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -14,12 +16,18 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
 import { ChevronLeft, UtensilsCrossed } from 'lucide-react-native';
 import { Button } from '../../components/ui/Button';
 import { StepperInput } from '../../components/ui/StepperInput';
 import { DietaryTagRow } from '../../components/recipe/DietaryTagRow';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import { useUserStore } from '../../stores/userStore';
+import { auth } from '../../lib/firebase';
+import { api } from '../../lib/api';
 import { TOKENS } from '../../lib/tokens';
 import type { DietaryTag } from '../../types';
 
@@ -28,17 +36,20 @@ const ALL_TAGS: DietaryTag[] = [
   'keto', 'paleo', 'nut-free', 'low-carb', 'high-protein', 'mediterranean',
 ];
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding } = useUserStore();
-  const { updateDietaryTags, updateHouseholdSize, connectAccount, isConnected, preferences } =
-    useUserPreferences();
+  const { fetchProfile } = useUserStore();
+  const { connectAccount, isConnected } = useUserPreferences();
 
   const [step, setStep] = useState(0);
   const [selectedTags, setSelectedTags] = useState<DietaryTag[]>([]);
   const [householdSize, setHouseholdSize] = useState(2);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignIn, setIsSignIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   const progressWidth = useSharedValue((1 / TOTAL_STEPS) * 100);
 
@@ -50,14 +61,49 @@ export default function OnboardingScreen() {
     if (step < TOTAL_STEPS - 1) {
       const next = step + 1;
       setStep(next);
-      progressWidth.value = withTiming(((next + 1) / TOTAL_STEPS) * 100, {
-        duration: 400,
-      });
-    } else {
-      updateDietaryTags(selectedTags);
-      updateHouseholdSize(householdSize);
-      completeOnboarding();
+      progressWidth.value = withTiming(((next + 1) / TOTAL_STEPS) * 100, { duration: 400 });
+    }
+  };
+
+  const handleAuth = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Missing fields', 'Please enter your email and password.');
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      if (isSignIn) {
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email.trim(), password);
+      }
+      // Provision / load profile from backend
+      await fetchProfile();
+      // Save collected preferences to backend (no-op for sign-in, harmless)
+      if (!isSignIn) {
+        await api.patch('/users/me/preferences', {
+          dietaryTags: selectedTags,
+          householdSize,
+        }).catch(() => {}); // non-fatal
+      }
       router.replace('/(tabs)');
+    } catch (err: any) {
+      console.error('[handleAuth] error:', err?.code, err?.message, err);
+      const msg =
+        err?.code === 'auth/email-already-in-use'
+          ? 'That email is already registered. Try signing in instead.'
+          : err?.code === 'auth/wrong-password' || err?.code === 'auth/user-not-found'
+          ? 'Incorrect email or password.'
+          : err?.code === 'auth/weak-password'
+          ? 'Password must be at least 6 characters.'
+          : err?.code === 'auth/invalid-email'
+          ? 'Please enter a valid email address.'
+          : err?.code === 'auth/invalid-credential'
+          ? 'Incorrect email or password.'
+          : `Error: ${err?.message ?? err?.code ?? 'Unknown error'}`;
+      Alert.alert('Error', msg);
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -242,12 +288,8 @@ export default function OnboardingScreen() {
                   {platform}
                 </Text>
                 <Switch
-                  value={isConnected(platform)}
-                  onValueChange={(val) => {
-                    if (val) {
-                      connectAccount(platform, `@user.${platform}`);
-                    }
-                  }}
+                  value={false}
+                  onValueChange={() => {/* connected accounts configured post-login */}}
                   trackColor={{
                     false: TOKENS.colors.border,
                     true: TOKENS.colors.primaryLight,
@@ -262,8 +304,68 @@ export default function OnboardingScreen() {
             ))}
 
             <View style={{ marginTop: 32, gap: 12 }}>
-              <Button label="Enter the app" onPress={goNext} variant="primary" fullWidth />
+              <Button label="Continue" onPress={goNext} variant="primary" fullWidth />
               <Button label="Skip for now" onPress={goNext} variant="ghost" fullWidth />
+            </View>
+          </View>
+        )}
+
+        {/* Step 4: Create / Sign in */}
+        {step === 4 && (
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: TOKENS.typography.sizes['2xl'], fontWeight: TOKENS.typography.weights.bold, color: TOKENS.colors.text, marginBottom: 8 }}>
+              {isSignIn ? 'Welcome back' : 'Create your account'}
+            </Text>
+            <Text style={{ fontSize: TOKENS.typography.sizes.md, color: TOKENS.colors.textSecondary, marginBottom: 32 }}>
+              {isSignIn ? 'Sign in to access your pantry and recipes.' : 'Save your pantry and recipes across devices.'}
+            </Text>
+
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+              placeholderTextColor={TOKENS.colors.textSecondary}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              style={{
+                backgroundColor: TOKENS.colors.inputBg,
+                borderRadius: 12,
+                padding: 16,
+                fontSize: TOKENS.typography.sizes.md,
+                color: TOKENS.colors.text,
+                marginBottom: 12,
+              }}
+            />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password"
+              placeholderTextColor={TOKENS.colors.textSecondary}
+              secureTextEntry
+              autoComplete={isSignIn ? 'password' : 'new-password'}
+              style={{
+                backgroundColor: TOKENS.colors.inputBg,
+                borderRadius: 12,
+                padding: 16,
+                fontSize: TOKENS.typography.sizes.md,
+                color: TOKENS.colors.text,
+                marginBottom: 24,
+              }}
+            />
+
+            <View style={{ gap: 12 }}>
+              <Button
+                label={authLoading ? 'Please wait…' : isSignIn ? 'Sign in' : 'Create account'}
+                onPress={handleAuth}
+                variant="primary"
+                fullWidth
+              />
+              <TouchableOpacity onPress={() => setIsSignIn(!isSignIn)} style={{ alignItems: 'center', paddingVertical: 8 }}>
+                <Text style={{ fontSize: TOKENS.typography.sizes.md, color: TOKENS.colors.primary }}>
+                  {isSignIn ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}

@@ -2,132 +2,98 @@
 
 import { create } from 'zustand';
 import type { User, UserPreferences, UserAddress, DietaryTag } from '../types';
-import { MOCK_USER } from '../lib/mockData';
+import { usersApi } from '../lib/api/users';
+import { auth } from '../lib/firebase';
+import { signOut as firebaseSignOut } from 'firebase/auth';
 
 interface UserStore {
   user: User | null;
   onboardingComplete: boolean;
-  setUser: (user: User) => void;
-  updatePreferences: (preferences: Partial<UserPreferences>) => void;
+  setUser: (user: User | null) => void;
+  fetchProfile: () => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: { name?: string; avatar?: string }) => Promise<void>;
+  updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
   completeOnboarding: () => void;
-  connectAccount: (platform: 'instagram' | 'tiktok' | 'instacart', handle: string) => void;
-  disconnectAccount: (platform: 'instagram' | 'tiktok' | 'instacart') => void;
-  toggleDietaryTag: (tag: DietaryTag) => void;
-  addAddress: (address: UserAddress) => void;
-  updateAddress: (id: string, address: Partial<UserAddress>) => void;
-  removeAddress: (id: string) => void;
-  setDefaultAddress: (id: string) => void;
+  connectAccount: (platform: string, handle: string) => Promise<void>;
+  disconnectAccount: (platform: string) => Promise<void>;
+  toggleDietaryTag: (tag: DietaryTag) => Promise<void>;
+  addAddress: (address: Omit<UserAddress, 'id'>) => Promise<void>;
+  updateAddress: (id: string, address: Omit<UserAddress, 'id'>) => Promise<void>;
+  removeAddress: (id: string) => Promise<void>;
+  setDefaultAddress: (id: string) => Promise<void>;
   getDefaultAddress: () => UserAddress | null;
 }
 
 export const useUserStore = create<UserStore>((set, get) => ({
-  user: MOCK_USER,
-  onboardingComplete: true,
+  user: null,
+  onboardingComplete: false,
 
   setUser: (user) => {
     set({ user });
   },
 
-  updatePreferences: (preferences) => {
-    set((state) => ({
-      user: state.user
-        ? { ...state.user, preferences: { ...state.user.preferences, ...preferences } }
-        : state.user,
-    }));
+  fetchProfile: async () => {
+    const data = await usersApi.getMe();
+    set({ user: data, onboardingComplete: true });
+  },
+
+  signOut: async () => {
+    await firebaseSignOut(auth);
+    set({ user: null, onboardingComplete: false });
+  },
+
+  updateProfile: async (updates) => {
+    const data = await usersApi.patchProfile(updates);
+    set({ user: data });
+  },
+
+  updatePreferences: async (preferences) => {
+    const data = await usersApi.patchPreferences(preferences);
+    set({ user: data });
   },
 
   completeOnboarding: () => {
     set({ onboardingComplete: true });
   },
 
-  connectAccount: (platform, handle) => {
-    set((state) => ({
-      user: state.user
-        ? {
-            ...state.user,
-            connectedAccounts: { ...state.user.connectedAccounts, [platform]: handle },
-          }
-        : state.user,
-    }));
+  connectAccount: async (platform, handle) => {
+    const data = await usersApi.connectAccount(platform, handle);
+    set({ user: data });
   },
 
-  disconnectAccount: (platform) => {
-    set((state) => {
-      if (!state.user) return state;
-      const { [platform]: _, ...rest } = state.user.connectedAccounts;
-      return { user: { ...state.user, connectedAccounts: rest } };
-    });
+  disconnectAccount: async (platform) => {
+    const data = await usersApi.disconnectAccount(platform);
+    set({ user: data });
   },
 
-  toggleDietaryTag: (tag) => {
-    set((state) => {
-      if (!state.user) return state;
-      const tags = state.user.preferences.dietaryTags;
-      const next = tags.includes(tag)
-        ? tags.filter((t) => t !== tag)
-        : [...tags, tag];
-      return {
-        user: {
-          ...state.user,
-          preferences: { ...state.user.preferences, dietaryTags: next },
-        },
-      };
-    });
+  toggleDietaryTag: async (tag) => {
+    const { user } = get();
+    if (!user) return;
+    const tags = user.preferences.dietaryTags;
+    const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
+    const data = await usersApi.patchPreferences({ dietaryTags: next });
+    set({ user: data });
   },
 
-  addAddress: (address) => {
-    set((state) => {
-      if (!state.user) return state;
-      const addresses = [...state.user.addresses, address];
-      const defaultId = addresses.length === 1 ? address.id : state.user.defaultAddressId;
-      return {
-        user: { ...state.user, addresses, defaultAddressId: defaultId },
-      };
-    });
+  addAddress: async (address) => {
+    const data = await usersApi.addAddress(address);
+    set({ user: data });
   },
 
-  updateAddress: (id, updates) => {
-    set((state) => {
-      if (!state.user) return state;
-      return {
-        user: {
-          ...state.user,
-          addresses: state.user.addresses.map((a) =>
-            a.id === id ? { ...a, ...updates } : a
-          ),
-        },
-      };
-    });
+  updateAddress: async (id, address) => {
+    const data = await usersApi.updateAddress(id, address);
+    set({ user: data });
   },
 
-  removeAddress: (id) => {
-    set((state) => {
-      if (!state.user) return state;
-      const addresses = state.user.addresses.filter((a) => a.id !== id);
-      const defaultId =
-        state.user.defaultAddressId === id
-          ? addresses[0]?.id ?? null
-          : state.user.defaultAddressId;
-      return {
-        user: { ...state.user, addresses, defaultAddressId: defaultId },
-      };
-    });
+  removeAddress: async (id) => {
+    const data = await usersApi.deleteAddress(id);
+    set({ user: data });
   },
 
-  setDefaultAddress: (id) => {
-    set((state) => {
-      if (!state.user) return state;
-      return {
-        user: {
-          ...state.user,
-          defaultAddressId: id,
-          addresses: state.user.addresses.map((a) => ({
-            ...a,
-            isDefault: a.id === id,
-          })),
-        },
-      };
-    });
+  setDefaultAddress: async (id) => {
+    const data = await usersApi.setDefaultAddress(id);
+    set({ user: data });
   },
 
   getDefaultAddress: () => {

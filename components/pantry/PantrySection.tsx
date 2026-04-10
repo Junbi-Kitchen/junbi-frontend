@@ -108,14 +108,16 @@ export function PantrySection({
 
       {/* Items */}
       {!collapsed && (
-        {items.map((item) => (
-          <PantryItemRow
-            key={item.id}
-            item={item}
-            onUpdateQuantity={onUpdateQuantity}
-            onDelete={onDelete}
-          />
-        ))}
+        <>
+          {items.map((item) => (
+            <PantryItemRow
+              key={item.id}
+              item={item}
+              onUpdateQuantity={onUpdateQuantity}
+              onDelete={onDelete}
+            />
+          ))}
+        </>
       )}
     </View>
   );

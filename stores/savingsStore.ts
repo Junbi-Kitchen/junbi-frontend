@@ -2,21 +2,7 @@
 
 import { create } from 'zustand';
 import type { WasteLogEntry, WeeklyTrend } from '../types';
-import { MOCK_WASTE_LOG, MOCK_WEEKLY_TRENDS } from '../lib/mockData';
-
-// Average item value estimate by category
-const ESTIMATED_VALUES: Record<string, number> = {
-  produce: 2.5,
-  proteins: 5.0,
-  dairy: 3.5,
-  grains: 2.0,
-  pantry: 1.5,
-  frozen: 4.0,
-  beverages: 3.0,
-  condiments: 2.0,
-  spices: 1.0,
-  bakery: 3.0,
-};
+import { savingsApi } from '../lib/api/savings';
 
 interface SavingsStore {
   totalSavedThisMonth: number;
@@ -25,54 +11,71 @@ interface SavingsStore {
   wasteLog: WasteLogEntry[];
   weeklyTrends: WeeklyTrend[];
   lastMonthSaved: number;
+  isLoading: boolean;
 
-  logUsed: (itemName: string, category: string) => number;
-  logTossed: (itemName: string, category: string) => void;
-  getEstimatedValue: (category: string) => number;
+  fetchSummary: () => Promise<void>;
+  fetchLog: () => Promise<void>;
+  // Optimistic local updates — real write happens in pantryStore.logAction
+  logUsed: (itemName: string, estimatedValue: number) => void;
+  logTossed: (itemName: string, estimatedValue: number) => void;
 }
 
-export const useSavingsStore = create<SavingsStore>((set, get) => ({
-  totalSavedThisMonth: 47.5,
-  totalSavedAllTime: 312.0,
-  totalWastedThisMonth: 8.5,
-  wasteLog: MOCK_WASTE_LOG,
-  weeklyTrends: MOCK_WEEKLY_TRENDS,
-  lastMonthSaved: 38.0,
+export const useSavingsStore = create<SavingsStore>((set) => ({
+  totalSavedThisMonth: 0,
+  totalSavedAllTime: 0,
+  totalWastedThisMonth: 0,
+  wasteLog: [],
+  weeklyTrends: [],
+  lastMonthSaved: 0,
+  isLoading: false,
 
-  getEstimatedValue: (category: string) => ESTIMATED_VALUES[category] ?? 2.0,
+  fetchSummary: async () => {
+    set({ isLoading: true });
+    try {
+      const data = await savingsApi.getSummary();
+      set({
+        totalSavedThisMonth: data.totalSavedThisMonth,
+        totalSavedAllTime: data.totalSavedAllTime,
+        totalWastedThisMonth: data.totalWastedThisMonth,
+        lastMonthSaved: data.lastMonthSaved,
+        weeklyTrends: data.weeklyTrends,
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-  logUsed: (itemName, category) => {
-    const value = get().getEstimatedValue(category);
+  fetchLog: async () => {
+    const data = await savingsApi.getLog({ limit: 50 });
+    set({ wasteLog: data.entries });
+  },
+
+  logUsed: (itemName, estimatedValue) => {
     const entry: WasteLogEntry = {
       id: `log-${Date.now()}`,
       itemName,
       action: 'used',
-      estimatedValue: value,
+      estimatedValue,
       date: new Date().toISOString(),
     };
-
     set((state) => ({
       wasteLog: [entry, ...state.wasteLog],
-      totalSavedThisMonth: state.totalSavedThisMonth + value,
-      totalSavedAllTime: state.totalSavedAllTime + value,
+      totalSavedThisMonth: state.totalSavedThisMonth + estimatedValue,
+      totalSavedAllTime: state.totalSavedAllTime + estimatedValue,
     }));
-
-    return value;
   },
 
-  logTossed: (itemName, category) => {
-    const value = get().getEstimatedValue(category);
+  logTossed: (itemName, estimatedValue) => {
     const entry: WasteLogEntry = {
       id: `log-${Date.now()}`,
       itemName,
       action: 'tossed',
-      estimatedValue: value,
+      estimatedValue,
       date: new Date().toISOString(),
     };
-
     set((state) => ({
       wasteLog: [entry, ...state.wasteLog],
-      totalWastedThisMonth: state.totalWastedThisMonth + value,
+      totalWastedThisMonth: state.totalWastedThisMonth + estimatedValue,
     }));
   },
 }));

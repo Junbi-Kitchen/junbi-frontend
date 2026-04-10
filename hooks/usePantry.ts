@@ -43,10 +43,12 @@ export function usePantry() {
 
   return {
     items: store.items,
+    isLoading: store.isLoading,
     lastScanResult: store.lastScanResult,
     addItem: store.addItem,
     removeItem: store.removeItem,
     updateQuantity: store.updateQuantity,
+    logAction: store.logAction,
     addFromReceipt: store.addFromReceipt,
     clearScanResult: store.clearScanResult,
     expiringItems,

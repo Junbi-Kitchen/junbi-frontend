@@ -1,6 +1,7 @@
 // Purpose: Hook wrapping the recipe feed with swipe gesture logic using Reanimated 3
 
 import { useCallback } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import {
   useSharedValue,
   useAnimatedStyle,
@@ -12,15 +13,26 @@ import {
 import { Gesture } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { useRecipeStore } from '../stores/recipeStore';
+import { recipesApi } from '../lib/api/recipes';
 import type { Recipe } from '../types';
 
 const SWIPE_THRESHOLD = 120;
 const SPRING_CONFIG = { damping: 20, stiffness: 200 };
 
-export function useRecipeFeed() {
-  const { feed, saveRecipe, skipRecipe } = useRecipeStore();
+export function useRecipeFeed(tags?: string) {
+  const { saveRecipe, skipRecipe } = useRecipeStore();
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
+
+  const { data, fetchNextPage, hasNextPage, isFetching } = useInfiniteQuery({
+    queryKey: ['recipe-feed', tags],
+    queryFn: ({ pageParam }) =>
+      recipesApi.getFeed({ cursor: pageParam as string | undefined, tags, limit: 10 }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+  });
+
+  const recipes: Recipe[] = data?.pages.flatMap((p) => p.recipes) ?? [];
 
   const rotation = useAnimatedStyle(() => ({
     transform: [
@@ -42,16 +54,22 @@ export function useRecipeFeed() {
     (recipe: Recipe) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       saveRecipe(recipe);
+      if (recipes.length < 3 && hasNextPage && !isFetching) {
+        fetchNextPage();
+      }
     },
-    [saveRecipe]
+    [saveRecipe, recipes.length, hasNextPage, isFetching, fetchNextPage]
   );
 
   const doSkip = useCallback(
     (id: string) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       skipRecipe(id);
+      if (recipes.length < 3 && hasNextPage && !isFetching) {
+        fetchNextPage();
+      }
     },
-    [skipRecipe]
+    [skipRecipe, recipes.length, hasNextPage, isFetching, fetchNextPage]
   );
 
   const handleSwipeRight = useCallback(
@@ -105,7 +123,8 @@ export function useRecipeFeed() {
   );
 
   return {
-    recipes: feed,
+    recipes,
+    isFetching,
     translateX,
     translateY,
     rotation,
@@ -113,5 +132,7 @@ export function useRecipeFeed() {
     handleSwipeLeft,
     handleSwipeRight,
     createGesture,
+    fetchNextPage,
+    hasNextPage,
   };
 }

@@ -20,8 +20,8 @@ import { SkeletonLoader } from '../components/ui/SkeletonLoader';
 import { Badge } from '../components/ui/Badge';
 import { DietaryTagRow } from '../components/recipe/DietaryTagRow';
 import { useRecipeStore } from '../stores/recipeStore';
+import { recipesApi } from '../lib/api/recipes';
 import { TOKENS } from '../lib/tokens';
-import { MOCK_RECIPES } from '../lib/mockData';
 import type { DietaryTag, ImportSource, Recipe } from '../types';
 
 const schema = z.object({
@@ -47,7 +47,7 @@ const SOURCE_ICONS = {
 
 export default function ImportScreen() {
   const router = useRouter();
-  const { addToImportQueue, loadFeed } = useRecipeStore();
+  const { addToImportQueue } = useRecipeStore();
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState<Recipe | null>(null);
   const [selectedTags, setSelectedTags] = useState<DietaryTag[]>([]);
@@ -68,20 +68,17 @@ export default function ImportScreen() {
   };
 
   const handleImport = async () => {
+    if (!urlValue) return;
     setImporting(true);
-    // Simulate a 1.5s fetch
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Mock: pick a random recipe as the "imported" result
-    const mock = MOCK_RECIPES[Math.floor(Math.random() * MOCK_RECIPES.length)];
-    setImported({
-      ...mock,
-      id: `import-${Date.now()}`,
-      importedFrom: source,
-      savedAt: new Date().toISOString(),
-    });
-    setValue('title', mock.title);
-    setImporting(false);
+    try {
+      const recipe = await recipesApi.importFromUrl(urlValue, source);
+      setImported(recipe);
+      setValue('title', recipe.title);
+    } catch {
+      // If import fails, fall through (leave imported null so user sees error state)
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleSave = () => {

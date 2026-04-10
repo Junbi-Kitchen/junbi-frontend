@@ -1,6 +1,6 @@
 // Purpose: Recipe detail screen with parallax hero, ingredient pantry split, and steps
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import { SkeletonLoader } from '../../components/ui/SkeletonLoader';
 import { usePantry } from '../../hooks/usePantry';
 import { useGroceryList } from '../../hooks/useGroceryList';
 import { useRecipeStore } from '../../stores/recipeStore';
+import { recipesApi } from '../../lib/api/recipes';
 import { TOKENS } from '../../lib/tokens';
 import { formatCookTime, pluralize } from '../../lib/utils';
 import { ToastNotification } from '../../components/ui/ToastNotification';
@@ -36,9 +37,15 @@ export default function RecipeDetailScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const [loading] = useState(false);
 
-  const { feed, saved } = useRecipeStore();
-  const allRecipes = [...feed, ...saved];
-  const recipe = allRecipes.find((r) => r.id === id);
+  const { saved } = useRecipeStore();
+  const localRecipe = saved.find((r) => r.id === id);
+  const [recipe, setRecipe] = useState(localRecipe);
+
+  useEffect(() => {
+    if (!localRecipe && id) {
+      recipesApi.getById(id).then(setRecipe).catch(() => {/* not found */});
+    }
+  }, [id]);
 
   const { hasIngredient } = usePantry();
   const { addRecipe, items: groceryItems } = useGroceryList();
@@ -68,7 +75,7 @@ export default function RecipeDetailScreen() {
   const missingCount = needIngredients.length;
 
   const handleAddMissing = () => {
-    addRecipe(recipe);
+    addRecipe(recipe.id);
     setToastVisible(true);
   };
 

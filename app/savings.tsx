@@ -1,6 +1,6 @@
 // Purpose: Savings analysis screen with stock-like graphs for monthly and all-time trends
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop, Line } from 'react-native-svg';
@@ -20,6 +20,10 @@ export default function SavingsScreen() {
   const router = useRouter();
   const savings = useSavingsStore();
   const [range, setRange] = useState<TimeRange>('month');
+
+  useEffect(() => {
+    savings.fetchLog();
+  }, []);
 
   const trends = savings.weeklyTrends;
   const usedCount = savings.wasteLog.filter((e) => e.action === 'used').length;
