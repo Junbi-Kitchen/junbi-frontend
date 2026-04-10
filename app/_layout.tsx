@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -92,9 +91,8 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <BottomSheetModalProvider>
-            <AuthGuard>
-              <Stack
+          <AuthGuard>
+            <Stack
                 screenOptions={{
                   headerShown: false,
                   contentStyle: { backgroundColor: TOKENS.colors.background },
@@ -109,9 +107,8 @@ export default function RootLayout() {
                 <Stack.Screen name="profile" />
                 <Stack.Screen name="savings" />
               </Stack>
-            </AuthGuard>
-            <StatusBar style="dark" />
-          </BottomSheetModalProvider>
+              <StatusBar style="dark" />
+          </AuthGuard>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -3,6 +3,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Tabs } from 'expo-router';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Home,
@@ -127,17 +128,19 @@ function CustomTabBar({ state, navigation }: { state: TabState; navigation: TabN
 
 export default function TabLayout() {
   return (
-    <Tabs
-      tabBar={(props) => <CustomTabBar {...(props as unknown as { state: TabState; navigation: TabNav; descriptors: unknown })} />}
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-      }}
-    >
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="kitchen" />
-      <Tabs.Screen name="chat" />
-      <Tabs.Screen name="grocery" />
-    </Tabs>
+    <BottomSheetModalProvider>
+      <Tabs
+        tabBar={(props) => <CustomTabBar {...(props as unknown as { state: TabState; navigation: TabNav; descriptors: unknown })} />}
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+        }}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="kitchen" />
+        <Tabs.Screen name="chat" />
+        <Tabs.Screen name="grocery" />
+      </Tabs>
+    </BottomSheetModalProvider>
   );
 }
