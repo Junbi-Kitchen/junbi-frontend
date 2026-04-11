@@ -1,6 +1,19 @@
+import Constants from 'expo-constants';
 import { auth } from './firebase';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+function getBaseUrl(): string {
+  // Production or explicit override: env var always wins
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  // Dev: derive IP from Expo's Metro bundler host so any device on the
+  // same WiFi connects without hardcoding an IP address
+  const host = Constants.expoConfig?.hostUri?.split(':')[0];
+  if (host) return `http://${host}:8000`;
+  return 'http://localhost:8000';
+}
+
+const BASE_URL = getBaseUrl();
 console.log('[api] BASE_URL =', BASE_URL);
 
 export class ApiError extends Error {

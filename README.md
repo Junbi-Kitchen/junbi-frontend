@@ -86,6 +86,11 @@ Copy the example `.env` file and fill in your values:
 cp .env.example .env
 ```
 
+| Variable | Description |
+|---|---|
+| `EXPO_PUBLIC_FIREBASE_*` | Firebase project config — copy from Firebase Console > Project Settings > Your apps > Web app |
+| `EXPO_PUBLIC_API_URL` | Backend URL — **leave blank in development**. The app auto-detects the backend IP from Expo's dev server, so physical devices on the same WiFi connect without any configuration. Set this only for production (`https://your-api.com`) or Android Emulator (`http://10.0.2.2:8000`). |
+
 ### 3. Install dependencies
 
 ```bash
@@ -332,6 +337,10 @@ brew install watchman
 - Confirm your phone and computer are on the same Wi-Fi network
 - Try switching from LAN to Tunnel mode (press `s` in the Expo dev menu)
 - If on a corporate/university network, use a hotspot instead
+
+### App connects to Expo but API calls fail
+
+Check the `[api] BASE_URL =` log in the Metro console. If the URL looks wrong, the auto-detection failed — set `EXPO_PUBLIC_API_URL` explicitly in `.env` to your machine's local IP (e.g. `http://192.168.1.x:8000`).
 
 ---
 
