@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -34,8 +35,15 @@ export default function ProfileScreen() {
   const editTagsSheetRef = useRef<BottomSheet>(null);
   const { preferences, toggleTag, hasTag, isConnected } =
     useUserPreferences();
-  const { user } = useUserStore();
+  const { user, signOut } = useUserStore();
   const { saved: savedRecipes } = useRecipeStore();
+
+  const handleSignOut = () => {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: () => signOut() },
+    ]);
+  };
 
   const connectedCount = (['instagram', 'tiktok', 'instacart'] as const).filter(
     (p) => isConnected(p)
@@ -250,11 +258,19 @@ export default function ProfileScreen() {
 
           {/* Settings */}
           <SectionHeader title="Settings" />
-          <Card padding="md" style={{ marginBottom: 40 }}>
+          <Card padding="md" style={{ marginBottom: 16 }}>
             <SettingRow label="Notifications" hasToggle />
             <SettingRow label="Units" value="Imperial" hasBorder />
             <SettingRow label="About Gook" />
           </Card>
+
+          <Button
+            label="Sign out"
+            onPress={handleSignOut}
+            variant="ghost"
+            fullWidth
+            style={{ marginBottom: 40 }}
+          />
         </View>
       </ScrollView>
 
