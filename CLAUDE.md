@@ -45,6 +45,8 @@ app/
 
 ### Key Files
 - `lib/tokens.ts` — ALL design tokens. Single source of truth for colors, spacing, typography.
+- `lib/constants.ts` — ALL app-wide branding (name, URL, tagline). Change the app name here, not in components.
+- `lib/copy.ts` — ALL UI text strings, organized by screen. Use `COPY.screen.key` in components — never hardcode user-facing strings inline.
 - `types/index.ts` — ALL TypeScript interfaces.
 - `lib/mockData.ts` — Seeds all stores for development.
 - `lib/storage.ts` — AsyncStorage wrapper for persisted boolean flags (`hasSeenOnboarding`). Swap the implementation to MMKV here when moving to a dev client — one place to change.
