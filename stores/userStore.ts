@@ -9,11 +9,13 @@ import { signOut as firebaseSignOut } from 'firebase/auth';
 interface UserStore {
   user: User | null;
   onboardingComplete: boolean;
+  pendingPreferences: { dietaryTags: DietaryTag[]; householdSize: number } | null;
   setUser: (user: User | null) => void;
   fetchProfile: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: { name?: string; avatar?: string }) => Promise<void>;
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
+  setPendingPreferences: (prefs: { dietaryTags: DietaryTag[]; householdSize: number } | null) => void;
   completeOnboarding: () => void;
   connectAccount: (platform: string, handle: string) => Promise<void>;
   disconnectAccount: (platform: string) => Promise<void>;
@@ -28,6 +30,7 @@ interface UserStore {
 export const useUserStore = create<UserStore>((set, get) => ({
   user: null,
   onboardingComplete: false,
+  pendingPreferences: null,
 
   setUser: (user) => {
     set({ user });
@@ -51,6 +54,10 @@ export const useUserStore = create<UserStore>((set, get) => ({
   updatePreferences: async (preferences) => {
     const data = await usersApi.patchPreferences(preferences);
     set({ user: data });
+  },
+
+  setPendingPreferences: (prefs) => {
+    set({ pendingPreferences: prefs });
   },
 
   completeOnboarding: () => {

@@ -17,6 +17,7 @@ import { useGroceryStore } from '../stores/groceryStore';
 import { useSavingsStore } from '../stores/savingsStore';
 import { useOrderStore } from '../stores/orderStore';
 import { TOKENS } from '../lib/tokens';
+import { storage, STORAGE_KEYS } from '../lib/storage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,9 +38,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const fetchSavings = useSavingsStore((s) => s.fetchSummary);
   const { fetchActiveOrder, fetchStores } = useOrderStore();
   const [authLoading, setAuthLoading] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      const seen = await storage.getBoolean(STORAGE_KEYS.HAS_SEEN_ONBOARDING);
+      setHasSeenOnboarding(seen);
       if (firebaseUser) {
         try {
           await fetchProfile();
@@ -68,12 +72,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (authLoading) return;
     const inAuthGroup = segments[0] === '(auth)';
+    const onQuizScreen = segments[0] === '(auth)' && segments[1] === 'quiz';
+
     if (!user && !inAuthGroup) {
-      router.replace('/(auth)/onboarding');
-    } else if (user && inAuthGroup) {
+      router.replace(hasSeenOnboarding ? '/(auth)/signin' : '/(auth)/onboarding');
+    } else if (user && inAuthGroup && !onQuizScreen) {
       router.replace('/(tabs)');
     }
-  }, [user, authLoading, segments]);
+    // user && onQuizScreen: stay on quiz (Case 3 — user just signed up, doing their quiz)
+  }, [user, authLoading, hasSeenOnboarding, segments]);
 
   if (authLoading) {
     return (
@@ -100,6 +107,8 @@ export default function RootLayout() {
                 }}
               >
                 <Stack.Screen name="(auth)/onboarding" />
+                <Stack.Screen name="(auth)/quiz" />
+                <Stack.Screen name="(auth)/signin" />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="recipe/[id]" />
                 <Stack.Screen name="import" />
