@@ -17,7 +17,9 @@ The current UI is built like every other recipe app: 4-tab layout, browse-first,
 ```
 app/
   _layout.tsx              # Root providers + nav shell
-  (auth)/onboarding.tsx    # 4-step onboarding
+  (auth)/onboarding.tsx    # Starting screen — logo, "Get started", "Already have an account?"
+  (auth)/quiz.tsx          # 2-step quiz — dietary preferences + household size
+  (auth)/signin.tsx        # Sign in / sign up form (Zod + RHF, password toggle, inline errors)
   (tabs)/
     _layout.tsx            # Bottom nav (4 tabs: Home, Kitchen, Agent, Grocery)
     index.tsx              # Home — agentic priority cards (swipeable) + stats sections
@@ -38,13 +40,15 @@ app/
 | recipeStore | Saved recipes, collections, favorites |
 | groceryStore | Grocery list, deduplication, store selection |
 | orderStore | Cart, order history, delivery addresses |
-| userStore | Profile, dietary prefs, connected accounts |
+| userStore | Profile, dietary prefs, connected accounts, `pendingPreferences` (transient quiz state carried through pre-auth signup) |
 | savingsStore | Savings tracking, waste log, weekly trends, monthly comparisons |
 
 ### Key Files
 - `lib/tokens.ts` — ALL design tokens. Single source of truth for colors, spacing, typography.
 - `types/index.ts` — ALL TypeScript interfaces.
 - `lib/mockData.ts` — Seeds all stores for development.
+- `lib/storage.ts` — AsyncStorage wrapper for persisted boolean flags (`hasSeenOnboarding`). Swap the implementation to MMKV here when moving to a dev client — one place to change.
+- `lib/api/` — Per-domain API modules (`users.ts`, `pantry.ts`, `recipes.ts`, etc.) + base `api.ts` with auto-detected backend URL.
 - `components/ui/` — Shared primitives (Button, Card, Input, etc.)
 
 ---
@@ -184,7 +188,6 @@ Show money saved prominently. This is our retention hook and viral loop.
 ## What Exists vs What Needs to Change
 
 ### KEEP (these work well)
-- Onboarding flow
 - Recipe detail screen
 - Recipe import flow
 - Grocery list + Instacart ordering
@@ -201,14 +204,18 @@ Show money saved prominently. This is our retention hook and viral loop.
 - `(tabs)/chat.tsx`: 4-agent selection screen with step-by-step agentic flows
 - `(tabs)/grocery.tsx`: Agentic grocery list with AI summary, aisle grouping, store picker
 - `(tabs)/kitchen.tsx`: Pantry grid + recipe collections (combined)
-- `profile.tsx`: Moved from tab to stack screen with back navigation
+- `profile.tsx`: Moved from tab to stack screen with back navigation; sign-out button added
 - `savings.tsx`: Stock-like savings analysis graphs (monthly/all-time)
 - `components/home/PriorityCard.tsx` — Swipeable agentic cards (fixed height)
 - `components/home/SavingsCounter.tsx` — Animated savings display
 - `components/pantry/FreshnessBar.tsx` — Color-coded expiry indicator
-
-### ADD (remaining features)
-- `components/shared/ShareCard.tsx` — Shareable savings social card
+- `components/shared/ShareCard.tsx` — Shareable savings card using native share sheet
+- `(auth)/onboarding.tsx`: Rewritten as starting screen (logo + two CTAs, no state)
+- `(auth)/quiz.tsx`: NEW — 2-step quiz (dietary tags + household size), sets `hasSeenOnboarding` flag
+- `(auth)/signin.tsx`: NEW — sign in/up with Zod + RHF, password visibility toggle, inline Firebase error messages
+- `_layout.tsx`: Auth gate reads `hasSeenOnboarding` from storage, routes first-time vs returning users correctly, `onQuizScreen` exception allows Case 3 post-signup quiz
+- `lib/storage.ts`: NEW — AsyncStorage wrapper for persisted boolean flags
+- `stores/userStore.ts`: Added `pendingPreferences` + `setPendingPreferences` for carrying quiz state through pre-auth signup
 
 ### DO NOT TOUCH
 - `lib/tokens.ts` — Design tokens are locked
@@ -237,27 +244,18 @@ Show money saved prominently. This is our retention hook and viral loop.
 - Lists: `<FlashList data={items} renderItem={...} estimatedItemSize={80} />`
 - Forms: `useForm<SchemaType>({ resolver: zodResolver(schema) })`
 - Navigation: `router.push('/recipe/[id]')` via Expo Router
-- Storage: MMKV for local persistence, Zustand for runtime state
+- Storage: `lib/storage.ts` (AsyncStorage wrapper) for persisted flags, Zustand for runtime state. MMKV will replace AsyncStorage inside `storage.ts` when switching to a dev client — change it in one place.
 
 ---
 
-## AI Integration Notes (for when backend connects)
+## Backend Integration Status
 
-The frontend is currently mock-data driven (lib/mockData.ts). When the backend is ready:
+Most features now call the real FastAPI backend via Zustand stores + `lib/api/`. `lib/mockData.ts` is used only for seeding stores during development when the backend is unreachable.
 
-- Replace mock data with TanStack React Query hooks calling the FastAPI backend
-- Every API call includes the authenticated user_id
-- Supabase Realtime subscriptions will push pantry/plan updates to the app
-- CrewAI agent results (meal plans, grocery lists) arrive via the same API
-- The AI chat sheet will call the Claude API through our backend proxy
-
-Query key convention (for future):
-```
-['pantry', userId]
-['recipes', userId]
-['meal-plan', userId, weekStart]
-['grocery-list', userId]
-```
+Still pending backend integration:
+- **AI agent flows** (Recipe Finder, Meal Planner, Smart Grocery, Savings Coach) — UI scaffolding exists in `chat.tsx`, no backend endpoints yet
+- **Receipt OCR** — frontend `useReceiptScanner` returns mock data and never calls the backend; backend also returns mock data and ignores the uploaded image
+- **Recipe URL import** — backend creates a blank stub row, no actual URL scraping
 
 ---
 
