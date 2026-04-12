@@ -10,6 +10,7 @@
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.8",
     "@hookform/resolvers": "^3.6.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@shopify/flash-list": "2.0.2",
     "@tanstack/react-query": "^5.40.0",
     "expo": "^54.0.0",
@@ -22,6 +23,7 @@
     "expo-linking": "~8.0.11",
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
+    "firebase": "^12.12.0",
     "lucide-react-native": "^0.395.0",
     "moti": "^0.29.0",
     "nativewind": "^4.0.36",
