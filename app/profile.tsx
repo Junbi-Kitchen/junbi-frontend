@@ -22,6 +22,8 @@ import { useUserPreferences } from '../hooks/useUserPreferences';
 import { useUserStore } from '../stores/userStore';
 import { useRecipeStore } from '../stores/recipeStore';
 import { TOKENS } from '../lib/tokens';
+import { APP } from '../lib/constants';
+import { COPY } from '../lib/copy';
 import { useRouter } from 'expo-router';
 import type { DietaryTag } from '../types';
 
@@ -261,7 +263,7 @@ export default function ProfileScreen() {
           <Card padding="md" style={{ marginBottom: 16 }}>
             <SettingRow label="Notifications" hasToggle />
             <SettingRow label="Units" value="Imperial" hasBorder />
-            <SettingRow label="About Gook" />
+            <SettingRow label={COPY.profile.about(APP.name)} />
           </Card>
 
           <Button

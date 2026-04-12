@@ -34,6 +34,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { TOKENS } from '../../lib/tokens';
+import { COPY } from '../../lib/copy';
 import { useRecipeStore } from '../../stores/recipeStore';
 import { useSavingsStore } from '../../stores/savingsStore';
 import { useGroceryStore } from '../../stores/groceryStore';
@@ -56,32 +57,32 @@ interface AgentDef {
 const AGENTS: AgentDef[] = [
   {
     id: 'recipe',
-    label: 'Recipe Finder',
-    description: 'Find recipes from what you have',
+    label: COPY.agents.list.recipe.label,
+    description: COPY.agents.list.recipe.description,
     icon: ChefHat,
     color: TOKENS.colors.primary,
     bgColor: TOKENS.colors.primaryMuted,
   },
   {
     id: 'mealplan',
-    label: 'Meal Planner',
-    description: 'Plan your week automatically',
+    label: COPY.agents.list.mealplan.label,
+    description: COPY.agents.list.mealplan.description,
     icon: CalendarDays,
     color: TOKENS.colors.accent,
     bgColor: TOKENS.colors.accentLight,
   },
   {
     id: 'grocery',
-    label: 'Smart Grocery',
-    description: 'Build a list from pantry gaps',
+    label: COPY.agents.list.grocery.label,
+    description: COPY.agents.list.grocery.description,
     icon: ShoppingCart,
     color: TOKENS.colors.primary,
     bgColor: TOKENS.colors.primaryMuted,
   },
   {
     id: 'savings',
-    label: 'Savings Coach',
-    description: 'Track waste and save money',
+    label: COPY.agents.list.savings.label,
+    description: COPY.agents.list.savings.description,
     icon: PiggyBank,
     color: TOKENS.colors.accent,
     bgColor: TOKENS.colors.accentLight,
@@ -161,7 +162,7 @@ function AgentPicker({ onSelect }: { onSelect: (id: AgentId) => void }) {
               color: TOKENS.colors.text,
             }}
           >
-            AI Agents
+            {COPY.agents.screenTitle}
           </Text>
         </View>
         <Text
@@ -171,7 +172,7 @@ function AgentPicker({ onSelect }: { onSelect: (id: AgentId) => void }) {
             lineHeight: 20,
           }}
         >
-          Pick an agent to handle your task. Each one walks you through step by step.
+          {COPY.agents.screenSubtitle}
         </Text>
       </View>
 
@@ -528,7 +529,7 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
       <View style={{ flex: 1, padding: 20 }}>
         <StepIndicator current={1} total={3} />
         <TypingDots />
-        <AiBubble text="Searching for the best matches..." delay={400} />
+        <AiBubble text={COPY.agents.recipeFinder.thinking} delay={400} />
       </View>
     );
   }
@@ -541,8 +542,8 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
 
         <AiBubble
           text={selectedIngredients.length > 0
-            ? `I found ${suggestions.length} recipes using ${selectedIngredients.join(', ')}. Pick one to get started!`
-            : `Here are ${suggestions.length} recipes you can make tonight.`
+            ? COPY.agents.recipeFinder.resultsWithIngredients(suggestions.length, selectedIngredients.join(', '))
+            : COPY.agents.recipeFinder.resultsGeneric(suggestions.length)
           }
         />
 
@@ -601,8 +602,8 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
 
       <AiBubble
         text={urgent.length > 0
-          ? `You have ${urgent.length} items expiring soon. Which ones do you want to cook with?`
-          : "Let me know what ingredients you want to use and I'll find the perfect recipe."
+          ? COPY.agents.recipeFinder.promptExpiring(urgent.length)
+          : COPY.agents.recipeFinder.promptGeneric
         }
       />
 
@@ -659,7 +660,7 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
       {items.filter((i) => !urgent.some((u) => u.id === i.id)).length > 0 && (
         <Animated.View entering={FadeInDown.delay(300).springify()}>
           <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
-            Other ingredients
+            {COPY.agents.recipeFinder.otherIngredients}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
             {items.filter((i) => !urgent.some((u) => u.id === i.id)).slice(0, 8).map((item) => {
@@ -695,7 +696,7 @@ function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }
       )}
 
       <CtaButton
-        label={selectedIngredients.length > 0 ? `Find recipes with ${selectedIngredients.length} items` : 'Find any recipe'}
+        label={COPY.agents.recipeFinder.findBtn(selectedIngredients.length)}
         onPress={handleFindRecipes}
       />
     </ScrollView>
@@ -742,12 +743,12 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={0} total={3} />
 
-        <AiBubble text="Let me plan your meals! Set your budget and how many days you want covered." />
+        <AiBubble text={COPY.agents.mealPlanner.prompt} />
 
         {/* Budget selector */}
         <Animated.View entering={FadeInDown.delay(200).springify()}>
           <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
-            Weekly budget
+            {COPY.agents.mealPlanner.budgetLabel}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
             {budgetOptions.map((b) => (
@@ -782,7 +783,7 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
         {/* Days selector */}
         <Animated.View entering={FadeInDown.delay(300).springify()}>
           <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
-            Number of days
+            {COPY.agents.mealPlanner.daysLabel}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8, marginBottom: 28 }}>
             {dayOptions.map((d) => (
@@ -814,7 +815,7 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
           </View>
         </Animated.View>
 
-        <CtaButton label={`Plan ${days} days for $${budget}`} onPress={handleGenerate} />
+        <CtaButton label={COPY.agents.mealPlanner.planBtn(days, budget)} onPress={handleGenerate} />
       </ScrollView>
     );
   }
@@ -824,7 +825,7 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
       <View style={{ flex: 1, padding: 20 }}>
         <StepIndicator current={1} total={3} />
         <TypingDots />
-        <AiBubble text={`Planning ${days} days under $${budget}... Using up expiring items first.`} delay={500} />
+        <AiBubble text={COPY.agents.mealPlanner.thinking(days, budget)} delay={500} />
       </View>
     );
   }
@@ -834,7 +835,7 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={2} total={3} />
 
-        <AiBubble text={`Your ${days}-day plan is ready! I prioritized expiring ingredients and kept it under $${budget}.`} />
+        <AiBubble text={COPY.agents.mealPlanner.ready(days, budget)} />
 
         <View style={{ gap: 8, marginBottom: 20 }}>
           {plan.map(({ day, recipe }, idx) => (
@@ -881,9 +882,9 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
           ))}
         </View>
 
-        <CtaButton label="Add missing items to grocery" onPress={onNext} />
+        <CtaButton label={COPY.agents.mealPlanner.addToGroceryBtn} onPress={onNext} />
         <View style={{ height: 8 }} />
-        <CtaButton label="Regenerate plan" onPress={handleGenerate} variant="secondary" />
+        <CtaButton label={COPY.agents.mealPlanner.regenerateBtn} onPress={handleGenerate} variant="secondary" />
       </ScrollView>
     );
   }
@@ -927,7 +928,7 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={0} total={3} />
 
-        <AiBubble text={`You have ${items.length} items in your pantry. Let me find what's missing and build a smart list.`} />
+        <AiBubble text={COPY.agents.smartGrocery.prompt(items.length)} />
 
         {/* Current pantry summary */}
         <Animated.View entering={FadeInDown.delay(200).springify()}>
@@ -944,17 +945,17 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.text }}>{items.length}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>In pantry</Text>
+                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.smartGrocery.stats.inPantry}</Text>
               </View>
               <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.warning }}>{expiringItems.length}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>Expiring</Text>
+                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.smartGrocery.stats.expiring}</Text>
               </View>
               <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.primary }}>{unchecked.length}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>On list</Text>
+                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.smartGrocery.stats.onList}</Text>
               </View>
             </View>
           </View>
@@ -964,7 +965,7 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
         {suggestions.length > 0 && (
           <Animated.View entering={FadeInDown.delay(300).springify()}>
             <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
-              Common staples you might need
+              {COPY.agents.smartGrocery.stapleslabel}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
               {suggestions.map((item) => (
@@ -988,7 +989,7 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
           </Animated.View>
         )}
 
-        <CtaButton label="Build smart grocery list" onPress={handleBuildList} />
+        <CtaButton label={COPY.agents.smartGrocery.buildBtn} onPress={handleBuildList} />
       </ScrollView>
     );
   }
@@ -998,7 +999,7 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
       <View style={{ flex: 1, padding: 20 }}>
         <StepIndicator current={1} total={3} />
         <TypingDots />
-        <AiBubble text="Analyzing your pantry and recent meals..." delay={500} />
+        <AiBubble text={COPY.agents.smartGrocery.thinking} delay={500} />
       </View>
     );
   }
@@ -1010,7 +1011,7 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={2} total={3} />
 
-        <AiBubble text={`Here's your optimized list — ${allItems.length} items. I added staples you're running low on.`} />
+        <AiBubble text={COPY.agents.smartGrocery.ready(allItems.length)} />
 
         <View
           style={{
@@ -1062,7 +1063,7 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
           ))}
         </View>
 
-        <CtaButton label="Add all to grocery list" onPress={() => router.push('/(tabs)/grocery')} />
+        <CtaButton label={COPY.agents.smartGrocery.addAllBtn} onPress={() => router.push('/(tabs)/grocery')} />
       </ScrollView>
     );
   }
@@ -1087,12 +1088,7 @@ function SavingsCoachFlow({ step, onNext }: { step: number; onNext: () => void }
     ? Math.round((usedCount / (usedCount + tossedCount)) * 100)
     : 100;
 
-  const tips = [
-    { title: 'FIFO your fridge', desc: 'Move older items to the front so you use them first.' },
-    { title: 'Freeze before it expires', desc: 'Most proteins and breads freeze well for weeks.' },
-    { title: 'Batch cook on Sundays', desc: 'Use expiring veggies in soups or stir-fries for the week.' },
-    { title: 'Check your pantry before shopping', desc: 'Avoid buying duplicates of what you already have.' },
-  ];
+  const tips = COPY.agents.savingsCoach.tips;
 
   if (step === 0 && !showTips) {
     return (
@@ -1101,8 +1097,8 @@ function SavingsCoachFlow({ step, onNext }: { step: number; onNext: () => void }
 
         <AiBubble
           text={savingsRate >= 80
-            ? `Amazing! You're saving ${savingsRate}% of your food. Here's your breakdown.`
-            : `You're saving ${savingsRate}% of your food. Let's get that higher — here's where you stand.`
+            ? COPY.agents.savingsCoach.promptGood(savingsRate)
+            : COPY.agents.savingsCoach.promptImprove(savingsRate)
           }
         />
 
@@ -1124,7 +1120,7 @@ function SavingsCoachFlow({ step, onNext }: { step: number; onNext: () => void }
                 ${savings.totalSavedThisMonth.toFixed(0)}
               </Text>
               <Text style={{ fontSize: 14, color: TOKENS.colors.textSecondary, marginTop: 2 }}>
-                saved this month
+                {COPY.agents.savingsCoach.stats.savedThisMonth}
               </Text>
             </View>
 
@@ -1132,17 +1128,17 @@ function SavingsCoachFlow({ step, onNext }: { step: number; onNext: () => void }
             <View style={{ flexDirection: 'row' }}>
               <View style={{ flex: 1, alignItems: 'center' }}>
                 <Text style={{ fontSize: 20, fontWeight: '700', color: TOKENS.colors.success }}>{usedCount}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>Items used</Text>
+                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.itemsUsed}</Text>
               </View>
               <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
               <View style={{ flex: 1, alignItems: 'center' }}>
                 <Text style={{ fontSize: 20, fontWeight: '700', color: TOKENS.colors.error }}>{tossedCount}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>Items wasted</Text>
+                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.itemsWasted}</Text>
               </View>
               <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
               <View style={{ flex: 1, alignItems: 'center' }}>
                 <Text style={{ fontSize: 20, fontWeight: '700', color: TOKENS.colors.primary }}>{savingsRate}%</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>Save rate</Text>
+                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.saveRate}</Text>
               </View>
             </View>
           </View>
@@ -1162,7 +1158,7 @@ function SavingsCoachFlow({ step, onNext }: { step: number; onNext: () => void }
             }}
           >
             <View>
-              <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>All-time savings</Text>
+              <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.allTimeSavings}</Text>
               <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.primary, marginTop: 2 }}>
                 ${savings.totalSavedAllTime.toFixed(0)}
               </Text>
@@ -1185,19 +1181,19 @@ function SavingsCoachFlow({ step, onNext }: { step: number; onNext: () => void }
             }}
           >
             <View>
-              <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>vs. last month</Text>
+              <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.vsLastMonth}</Text>
               <Text style={{ fontSize: 18, fontWeight: '700', color: TOKENS.colors.accent, marginTop: 2 }}>
                 {savings.totalSavedThisMonth >= savings.lastMonthSaved ? '+' : ''}
                 ${(savings.totalSavedThisMonth - savings.lastMonthSaved).toFixed(0)}
               </Text>
             </View>
             <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>
-              Last month: ${savings.lastMonthSaved.toFixed(0)}
+              {COPY.agents.savingsCoach.stats.lastMonth(savings.lastMonthSaved.toFixed(0))}
             </Text>
           </View>
         </Animated.View>
 
-        <CtaButton label="Show me tips to save more" onPress={() => setShowTips(true)} />
+        <CtaButton label={COPY.agents.savingsCoach.tipsBtn} onPress={() => setShowTips(true)} />
       </ScrollView>
     );
   }

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Gook",
-    "slug": "gook-frontend",
+    "name": "Junbi",
+    "slug": "junbi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,21 +13,21 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gook.app"
+      "bundleIdentifier": "com.junbi.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAF7"
       },
-      "package": "com.gook.app"
+      "package": "com.junbi.app"
     },
     "plugins": [
       "expo-router",
       "expo-camera",
       "expo-image-picker"
     ],
-    "scheme": "gook",
+    "scheme": "junbi",
     "experiments": {
       "typedRoutes": true
     }

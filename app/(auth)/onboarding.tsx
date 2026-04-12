@@ -1,12 +1,13 @@
-// Purpose: Starting screen — first thing a new user sees. Navigates to quiz or signin.
+// Purpose: Welcome screen for first-time users. Leads to quiz then signin.
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { UtensilsCrossed } from 'lucide-react-native';
 import { Button } from '../../components/ui/Button';
 import { TOKENS } from '../../lib/tokens';
+import { APP } from '../../lib/constants';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
       <View style={{ flex: 1, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center' }}>
+        {/* Icon */}
         <View
           style={{
             width: 96,
@@ -28,6 +30,7 @@ export default function OnboardingScreen() {
           <UtensilsCrossed size={48} color={TOKENS.colors.primary} />
         </View>
 
+        {/* Headline */}
         <Text
           style={{
             fontSize: TOKENS.typography.sizes['3xl'],
@@ -37,9 +40,8 @@ export default function OnboardingScreen() {
             marginBottom: 12,
           }}
         >
-          Welcome to Gook
+          Welcome to {APP.name}
         </Text>
-
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.lg,
@@ -52,29 +54,23 @@ export default function OnboardingScreen() {
           Import recipes, track your pantry, and get AI-powered meal suggestions delivered to your door.
         </Text>
 
-        <Button
-          label="Get started"
-          onPress={() => router.push('/(auth)/quiz')}
-          variant="primary"
-          size="lg"
-          fullWidth
-        />
-
-        <TouchableOpacity
-          onPress={() => router.push('/(auth)/signin')}
-          accessibilityLabel="Sign in to existing account"
-          style={{ marginTop: 20, paddingVertical: 8 }}
-        >
-          <Text
-            style={{
-              fontSize: TOKENS.typography.sizes.md,
-              color: TOKENS.colors.primary,
-              fontWeight: TOKENS.typography.weights.medium,
-            }}
-          >
-            Already have an account? Sign in
-          </Text>
-        </TouchableOpacity>
+        {/* CTAs */}
+        <View style={{ width: '100%', gap: 12 }}>
+          <Button
+            label="Get started"
+            onPress={() => router.push('/(auth)/quiz')}
+            variant="primary"
+            size="lg"
+            fullWidth
+          />
+          <Button
+            label="I already have an account"
+            onPress={() => router.push('/(auth)/signin')}
+            variant="ghost"
+            size="lg"
+            fullWidth
+          />
+        </View>
       </View>
     </SafeAreaView>
   );

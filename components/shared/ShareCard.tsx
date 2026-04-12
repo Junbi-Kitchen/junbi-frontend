@@ -5,6 +5,8 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Share as ShareIcon } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { TOKENS } from '../../lib/tokens';
+import { APP } from '../../lib/constants';
+import { COPY } from '../../lib/copy';
 import { useUserStore } from '../../stores/userStore';
 import { useSavingsStore } from '../../stores/savingsStore';
 
@@ -20,7 +22,7 @@ export function ShareCard({ onShare }: ShareCardProps) {
   const handleShare = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const message = `I saved $${totalSavedThisMonth.toFixed(2)} this month by reducing food waste with Gook! 🥬\n\n${mealsCooked} meals cooked from ingredients that would have expired.\n\nStop wasting food → gook.app`;
+    const message = COPY.shareCard.message(APP.name, APP.url, totalSavedThisMonth.toFixed(2), mealsCooked);
 
     try {
       const { Share } = await import('react-native');
@@ -52,7 +54,7 @@ export function ShareCard({ onShare }: ShareCardProps) {
             marginBottom: 20,
           }}
         >
-          gook
+          {APP.name}
         </Text>
 
         {/* Name + savings */}

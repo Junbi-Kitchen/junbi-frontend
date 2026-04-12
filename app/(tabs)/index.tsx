@@ -25,6 +25,8 @@ import { useSavingsStore } from '../../stores/savingsStore';
 import { PriorityCard } from '../../components/home/PriorityCard';
 import { SkeletonLoader } from '../../components/ui/SkeletonLoader';
 import { TOKENS } from '../../lib/tokens';
+import { APP } from '../../lib/constants';
+import { COPY } from '../../lib/copy';
 import { getDaysUntilExpiry } from '../../lib/utils';
 import type { PriorityCardData } from '../../components/home/PriorityCard';
 
@@ -195,7 +197,7 @@ export default function HomeScreen() {
               color: TOKENS.colors.primary,
             }}
           >
-            gook
+            {APP.name}
           </Text>
           <Text
             style={{
@@ -252,15 +254,15 @@ export default function HomeScreen() {
 
         {/* ─── Pantry at a glance ──────────────────── */}
         <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
-          <SectionLabel text="Pantry at a glance" />
+          <SectionLabel text={COPY.home.pantrySection} />
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <StatBox label="Items" value={`${items.length}`} />
+            <StatBox label={COPY.home.stats.items} value={`${items.length}`} />
             <StatBox
-              label="Expiring soon"
+              label={COPY.home.stats.expiringSoon}
               value={`${expiringItems.length}`}
               valueColor={expiringItems.length > 0 ? TOKENS.colors.warning : undefined}
             />
-            <StatBox label="Recipes" value={`${recipes.length}`} />
+            <StatBox label={COPY.home.stats.recipes} value={`${recipes.length}`} />
           </View>
         </View>
 
@@ -271,20 +273,20 @@ export default function HomeScreen() {
           activeOpacity={0.7}
           style={{ paddingHorizontal: 20, marginTop: 24 }}
         >
-          <SectionLabel text="This month" action="See analysis" />
+          <SectionLabel text={COPY.home.savingsSection} action={COPY.home.seeAnalysis} />
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <StatBox
-              label="Saved"
+              label={COPY.home.stats.saved}
               value={`$${savings.totalSavedThisMonth.toFixed(0)}`}
               valueColor={TOKENS.colors.accent}
             />
             <StatBox
-              label="Wasted"
+              label={COPY.home.stats.wasted}
               value={`$${savings.totalWastedThisMonth.toFixed(0)}`}
               valueColor={savings.totalWastedThisMonth > 0 ? TOKENS.colors.error : undefined}
             />
             <StatBox
-              label="All time"
+              label={COPY.home.stats.allTime}
               value={`$${savings.totalSavedAllTime.toFixed(0)}`}
               valueColor={TOKENS.colors.primary}
             />
@@ -294,7 +296,7 @@ export default function HomeScreen() {
         {/* ─── Expiring items list ───────────────────── */}
         {expiringItems.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-            <SectionLabel text="Use these first" />
+            <SectionLabel text={COPY.home.expiringSection} />
             <View
               style={{
                 backgroundColor: TOKENS.colors.white,
@@ -348,20 +350,20 @@ export default function HomeScreen() {
 
         {/* ─── Quick actions ─────────────────────────── */}
         <View style={{ paddingHorizontal: 20, marginTop: 24, marginBottom: 8 }}>
-          <SectionLabel text="Quick actions" />
+          <SectionLabel text={COPY.home.quickActions} />
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <QuickAction
-              label="Scan receipt"
+              label={COPY.home.actions.scanReceipt}
               icon="📷"
               onPress={() => router.push('/(tabs)/kitchen')}
             />
             <QuickAction
-              label="Import recipe"
+              label={COPY.home.actions.importRecipe}
               icon="📲"
               onPress={() => router.push('/import')}
             />
             <QuickAction
-              label="Ask agent"
+              label={COPY.home.actions.askAgent}
               icon="🤖"
               onPress={() => router.push('/(tabs)/chat')}
             />

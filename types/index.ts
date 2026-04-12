@@ -1,4 +1,4 @@
-// Purpose: All shared TypeScript interfaces and enums for the Gook app
+// Purpose: All shared TypeScript interfaces and enums for the Junbi app
 
 export type DietaryTag =
   | 'vegan'
