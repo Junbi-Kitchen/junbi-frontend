@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,7 +13,6 @@ import { ChevronLeft } from 'lucide-react-native';
 import { Button } from '../../components/ui/Button';
 import { StepperInput } from '../../components/ui/StepperInput';
 import { useUserStore } from '../../stores/userStore';
-import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { TOKENS } from '../../lib/tokens';
 import type { DietaryTag } from '../../types';
 
@@ -24,8 +23,7 @@ const ALL_TAGS: DietaryTag[] = [
 
 export default function QuizScreen() {
   const router = useRouter();
-  const { fromSignin } = useLocalSearchParams<{ fromSignin?: string }>();
-  const { updatePreferences, setPendingPreferences } = useUserStore();
+  const { user, updatePreferences, setPendingPreferences } = useUserStore();
 
   const [step, setStep] = useState<0 | 1>(0);
   const [selectedTags, setSelectedTags] = useState<DietaryTag[]>([]);
@@ -52,13 +50,12 @@ export default function QuizScreen() {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      await storage.set(STORAGE_KEYS.HAS_SEEN_ONBOARDING, true);
-      if (fromSignin === 'true') {
-        // Case 3: already authenticated — save prefs to backend and go home
+      if (user) {
+        // Already authenticated (same-device new account) — save prefs, go to tabs
         await updatePreferences({ dietaryTags: selectedTags, householdSize });
         router.replace('/(tabs)');
       } else {
-        // Case 1: pre-auth — stash prefs in Zustand, navigate to signup
+        // Pre-auth — stash prefs in Zustand, navigate to signup
         setPendingPreferences({ dietaryTags: selectedTags, householdSize });
         router.push('/(auth)/signin');
       }

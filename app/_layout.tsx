@@ -31,22 +31,23 @@ const queryClient = new QueryClient({
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const router = useRouter();
-  const { user, setUser, fetchProfile } = useUserStore();
+  const { user, setUser, fetchProfile, hasSeenOnboarding, setHasSeenOnboarding } = useUserStore();
   const fetchPantry = usePantryStore((s) => s.fetchItems);
   const { fetchSaved, fetchCollections } = useRecipeStore();
   const fetchGrocery = useGroceryStore((s) => s.fetchItems);
   const fetchSavings = useSavingsStore((s) => s.fetchSummary);
   const { fetchActiveOrder, fetchStores } = useOrderStore();
   const [authLoading, setAuthLoading] = useState(true);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       const seen = await storage.getBoolean(STORAGE_KEYS.HAS_SEEN_ONBOARDING);
-      setHasSeenOnboarding(seen);
+      console.log('[Auth] onAuthStateChanged fired — firebaseUser:', !!firebaseUser, '| hasSeenOnboarding from storage:', seen);
+      if (seen) setHasSeenOnboarding(true);
       if (firebaseUser) {
         try {
           await fetchProfile();
+          console.log('[Auth] fetchProfile complete');
           // Fire-and-forget parallel data loads after auth succeeds
           Promise.all([
             fetchPantry(),
@@ -73,13 +74,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (authLoading) return;
     const inAuthGroup = segments[0] === '(auth)';
     const onQuizScreen = segments[0] === '(auth)' && segments[1] === 'quiz';
+    console.log('[Guard] user:', !!user, '| hasSeenOnboarding:', hasSeenOnboarding, '| segments:', segments);
 
     if (!user && !inAuthGroup) {
+      console.log('[Guard] → redirecting to', hasSeenOnboarding ? 'signin' : 'onboarding');
       router.replace(hasSeenOnboarding ? '/(auth)/signin' : '/(auth)/onboarding');
     } else if (user && inAuthGroup && !onQuizScreen) {
+      console.log('[Guard] → redirecting to tabs');
       router.replace('/(tabs)');
     }
-    // user && onQuizScreen: stay on quiz (Case 3 — user just signed up, doing their quiz)
   }, [user, authLoading, hasSeenOnboarding, segments]);
 
   if (authLoading) {

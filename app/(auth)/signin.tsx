@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useUserStore } from '../../stores/userStore';
 import { auth } from '../../lib/firebase';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { TOKENS } from '../../lib/tokens';
 
 const schema = z.object({
@@ -39,9 +40,9 @@ function mapFirebaseError(code: string): string {
 
 export default function SignInScreen() {
   const router = useRouter();
-  const { fetchProfile, updatePreferences, pendingPreferences, setPendingPreferences } = useUserStore();
+  const { updatePreferences, pendingPreferences, setPendingPreferences, setHasSeenOnboarding } = useUserStore();
 
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup'>(pendingPreferences ? 'signup' : 'signin');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -56,19 +57,24 @@ export default function SignInScreen() {
     try {
       if (mode === 'signin') {
         await signInWithEmailAndPassword(auth, email.trim(), password);
-        await fetchProfile();
-        router.replace('/(tabs)');
+        console.log('[SignIn] signin success — setting hasSeenOnboarding');
+        setHasSeenOnboarding(true);
+        await storage.set(STORAGE_KEYS.HAS_SEEN_ONBOARDING, true);
+        console.log('[SignIn] hasSeenOnboarding set');
+        // auth guard handles fetchProfile and navigation
       } else {
         await createUserWithEmailAndPassword(auth, email.trim(), password);
-        await fetchProfile();
+        console.log('[SignIn] signup success — setting hasSeenOnboarding');
+        setHasSeenOnboarding(true);
+        await storage.set(STORAGE_KEYS.HAS_SEEN_ONBOARDING, true);
+        console.log('[SignIn] hasSeenOnboarding set');
         if (pendingPreferences) {
-          // Case 1: prefs collected during quiz — flush to backend and go home
+          // First install: quiz done before signup — flush prefs, auth guard navigates to tabs
           updatePreferences(pendingPreferences).catch(() => {});
           setPendingPreferences(null);
-          router.replace('/(tabs)');
         } else {
-          // Case 3: signed up without quiz — send to quiz now
-          router.replace({ pathname: '/(auth)/quiz', params: { fromSignin: 'true' } });
+          // Same-device new account: quiz after signup
+          router.replace('/(auth)/quiz');
         }
       }
     } catch (e: any) {

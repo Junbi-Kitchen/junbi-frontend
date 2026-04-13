@@ -9,6 +9,8 @@ import { signOut as firebaseSignOut } from 'firebase/auth';
 interface UserStore {
   user: User | null;
   onboardingComplete: boolean;
+  hasSeenOnboarding: boolean;
+  setHasSeenOnboarding: (val: boolean) => void;
   pendingPreferences: { dietaryTags: DietaryTag[]; householdSize: number } | null;
   setUser: (user: User | null) => void;
   fetchProfile: () => Promise<void>;
@@ -30,7 +32,12 @@ interface UserStore {
 export const useUserStore = create<UserStore>((set, get) => ({
   user: null,
   onboardingComplete: false,
+  hasSeenOnboarding: false,
   pendingPreferences: null,
+
+  setHasSeenOnboarding: (val) => {
+    set({ hasSeenOnboarding: val });
+  },
 
   setUser: (user) => {
     set({ user });
