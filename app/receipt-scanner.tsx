@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Asset } from 'expo-asset';
-import MlkitOcr from 'react-native-mlkit-ocr';
+import { runCloudVision } from '../utils/cloudVisionOcr';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft, Camera, ScanLine } from 'lucide-react-native';
 import { SkeletonLoader } from '../components/ui/SkeletonLoader';
@@ -51,18 +51,21 @@ export default function ReceiptScannerScreen() {
     setProcessing(true);
     setError(null);
     try {
-      // Preprocess: resize longest side to max 1200px
+      // Preprocess: resize to max 1200px wide and extract base64
       const processed = await ImageManipulator.manipulateAsync(
         uri,
         [{ resize: { width: 1200 } }],
-        { format: ImageManipulator.SaveFormat.JPEG, compress: 0.9 }
+        { format: ImageManipulator.SaveFormat.JPEG, compress: 0.9, base64: true }
       );
 
+      if (!processed.base64) {
+        setError("Couldn't prepare the image. Try again.");
+        return;
+      }
+
       // OCR
-      const blocks = await MlkitOcr.detectFromUri(processed.uri);
-      const rawText = blocks
-        .map((b: { lines: { text: string }[] }) => b.lines.map(l => l.text).join('\n'))
-        .join('\n');
+      const rawText = await runCloudVision(processed.base64);
+      console.log('=== RAW OCR TEXT ===\n' + rawText + '\n=== END RAW OCR TEXT ===');
 
       if (!rawText.trim()) {
         setError("Couldn't read the receipt. Try better lighting or a clearer image.");

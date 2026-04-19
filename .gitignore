@@ -13,7 +13,16 @@ expo-env.d.ts
 # Superpowers / Claude tooling (not for production)
 docs/superpowers/
 
-assets/test-receipt.jpg
+# Test receipt images (local dev only)
+assets/test-receipt*.jpg
+assets/test-receipt*.png
+
+# Generated native project (expo run:android)
+android/
+
+# Debug output from OCR dev scripts
+ocr-results.txt
+parse-results.json
 
 # IDE / tooling
 .idea/
