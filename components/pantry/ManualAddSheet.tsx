@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Input } from '../ui/Input';
+import { BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { StepperInput } from '../ui/StepperInput';
 import { Button } from '../ui/Button';
 import { TOKENS } from '../../lib/tokens';
@@ -80,11 +80,24 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
           Add to Pantry
         </Text>
 
-        <Input
-          placeholder="Search or type an ingredient..."
-          value={search}
-          onChangeText={(t) => { setSearch(t); setSelected(null); }}
-        />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderRadius: 12,
+            backgroundColor: TOKENS.colors.inputBg,
+            height: 48,
+            paddingHorizontal: 16,
+          }}
+        >
+          <BottomSheetTextInput
+            placeholder="Search or type an ingredient..."
+            placeholderTextColor="#9CA3AF"
+            value={search}
+            onChangeText={(t) => { setSearch(t); setSelected(null); }}
+            style={{ flex: 1, fontSize: 16, color: TOKENS.colors.text }}
+          />
+        </View>
 
         {/* Suggestions dropdown */}
         {isSearching && (
@@ -94,7 +107,7 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
         )}
 
         {suggestions.length > 0 && (
-          <ScrollView
+          <BottomSheetScrollView
             style={{ maxHeight: 200, marginTop: 4 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -120,7 +133,7 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
                 </Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </BottomSheetScrollView>
         )}
 
         {/* Quantity & unit — shown once user has typed/selected something */}

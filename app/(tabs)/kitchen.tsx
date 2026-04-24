@@ -27,6 +27,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheetWrapper } from '../../components/ui/BottomSheetWrapper';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { SkeletonLoader } from '../../components/ui/SkeletonLoader';
@@ -80,6 +81,9 @@ export default function KitchenScreen() {
   const manualAddRef = useRef<BottomSheet>(null);
   const newCollectionRef = useRef<BottomSheet>(null);
 
+  const insets = useSafeAreaInsets();
+  // Tab bar: paddingTop(10) + icon(22) + gap(4) + label(10) + paddingBottom(max(insets.bottom, 8))
+  const tabBarHeight = 46 + Math.max(insets.bottom, 8);
   const { items, logAction, updateQuantity, removeItem } = usePantry();
   const { logUsed, logTossed } = useSavingsStore();
   const {
@@ -161,6 +165,7 @@ export default function KitchenScreen() {
           recipes={colRecipes}
           onBack={() => setActiveCollection(null)}
           onRecipePress={(id) => router.push(`/recipe/${id}`)}
+          tabBarHeight={tabBarHeight}
         />
       </SafeAreaView>
     );
@@ -171,7 +176,7 @@ export default function KitchenScreen() {
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 8 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}
       >
         {/* Header */}
         <View
@@ -555,7 +560,7 @@ export default function KitchenScreen() {
                 >
                   Recently Saved
                 </Text>
-                {saved.slice(0, 5).map((recipe) => (
+                {saved.map((recipe) => (
                   <RecipeListRow
                     key={recipe.id}
                     recipe={recipe}
@@ -904,14 +909,16 @@ function CollectionDetail({
   recipes,
   onBack,
   onRecipePress,
+  tabBarHeight,
 }: {
   collection: RecipeCollection;
   recipes: Recipe[];
   onBack: () => void;
   onRecipePress: (id: string) => void;
+  tabBarHeight: number;
 }) {
   return (
-    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}>
       <View
         style={{
           paddingHorizontal: 20,
