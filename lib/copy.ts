@@ -165,6 +165,21 @@ export const COPY = {
     about: (appName: string) => `About ${appName}`,
   },
 
+  // ─── Quiz ───────────────────────────────────────────────────
+  quiz: {
+    title: 'Any dietary preferences?',
+    subtitle: 'Pick all that apply. You can always change this later.',
+    noneTag: 'None',
+    continueBtn: 'Continue',
+  },
+
+  // ─── Recipe detail ──────────────────────────────────────────
+  recipe: {
+    cookSettings: 'Cook settings',
+    portions: 'Portions',
+    dietaryRestrictions: 'Dietary restrictions',
+  },
+
   // ─── Share card ─────────────────────────────────────────────
   shareCard: {
     message: (appName: string, url: string, saved: string, meals: number) =>

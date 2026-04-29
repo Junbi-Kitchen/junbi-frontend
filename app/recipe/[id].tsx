@@ -5,7 +5,6 @@ import {
   View,
   Text,
   ScrollView,
-  Image,
   TouchableOpacity,
   Dimensions,
   Animated,
@@ -19,13 +18,22 @@ import { RecipeIngredientRow } from '../../components/recipe/RecipeIngredientRow
 import { RecipeStepCard } from '../../components/recipe/RecipeStepCard';
 import { Button } from '../../components/ui/Button';
 import { SkeletonLoader } from '../../components/ui/SkeletonLoader';
+import { StepperInput } from '../../components/ui/StepperInput';
 import { usePantry } from '../../hooks/usePantry';
 import { useGroceryList } from '../../hooks/useGroceryList';
 import { useRecipeStore } from '../../stores/recipeStore';
+import { useUserStore } from '../../stores/userStore';
 import { recipesApi } from '../../lib/api/recipes';
 import { TOKENS } from '../../lib/tokens';
+import { COPY } from '../../lib/copy';
 import { formatCookTime, pluralize } from '../../lib/utils';
 import { ToastNotification } from '../../components/ui/ToastNotification';
+import type { DietaryTag } from '../../types';
+
+const ALL_TAGS: DietaryTag[] = [
+  'vegan', 'vegetarian', 'gluten-free', 'dairy-free',
+  'keto', 'paleo', 'nut-free', 'low-carb', 'high-protein', 'mediterranean',
+];
 
 const { height: H } = Dimensions.get('window');
 const HERO_HEIGHT = 320;
@@ -38,14 +46,31 @@ export default function RecipeDetailScreen() {
   const [loading] = useState(false);
 
   const { saved } = useRecipeStore();
+  const { user } = useUserStore();
   const localRecipe = saved.find((r) => r.id === id);
   const [recipe, setRecipe] = useState(localRecipe);
+  const [portions, setPortions] = useState(localRecipe?.servings ?? 4);
+  const [activeRestrictions, setActiveRestrictions] = useState<DietaryTag[]>(
+    user?.preferences.dietaryTags ?? []
+  );
 
   useEffect(() => {
     if (!localRecipe && id) {
-      recipesApi.getById(id).then(setRecipe).catch(() => {/* not found */});
+      recipesApi.getById(id).then((r) => {
+        setRecipe(r);
+        setPortions(r.servings ?? 4);
+      }).catch(() => {/* not found */});
     }
   }, [id]);
+
+  const baseServings = recipe?.servings ?? 4;
+  const scale = portions / baseServings;
+
+  const toggleRestriction = (tag: DietaryTag) => {
+    setActiveRestrictions((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
 
   const { hasIngredient } = usePantry();
   const { addRecipe, items: groceryItems } = useGroceryList();
@@ -158,6 +183,57 @@ export default function RecipeDetailScreen() {
             {recipe.description}
           </Text>
 
+          {/* Cook settings */}
+          <View
+            style={{
+              backgroundColor: TOKENS.colors.white,
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 20,
+              ...TOKENS.shadows.sm,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: TOKENS.colors.text }}>
+                {COPY.recipe.portions}
+              </Text>
+              <StepperInput value={portions} onChange={setPortions} min={1} max={12} unit="servings" />
+            </View>
+            <View style={{ height: 1, backgroundColor: TOKENS.colors.border, marginBottom: 14 }} />
+            <Text style={{ fontSize: 15, fontWeight: '600', color: TOKENS.colors.text, marginBottom: 10 }}>
+              {COPY.recipe.dietaryRestrictions}
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {ALL_TAGS.map((tag) => {
+                const active = activeRestrictions.includes(tag);
+                return (
+                  <TouchableOpacity
+                    key={tag}
+                    onPress={() => toggleRestriction(tag)}
+                    accessibilityLabel={`${active ? 'Remove' : 'Add'} ${tag} restriction`}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 999,
+                      backgroundColor: active ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+                      borderWidth: active ? 1.5 : 0,
+                      borderColor: TOKENS.colors.primary,
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: 13,
+                      fontWeight: '500',
+                      color: active ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
+                      textTransform: 'capitalize',
+                    }}>
+                      {tag}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
           {/* Tags */}
           <View style={{ marginBottom: 24 }}>
             <DietaryTagRow tags={recipe.tags} />
@@ -203,7 +279,7 @@ export default function RecipeDetailScreen() {
                 What you have ({haveIngredients.length})
               </Text>
               {haveIngredients.map((ing) => (
-                <RecipeIngredientRow key={ing.id} ingredient={ing} inPantry={true} />
+                <RecipeIngredientRow key={ing.id} ingredient={ing} inPantry={true} scaledQuantity={ing.quantity * scale} />
               ))}
             </>
           )}
@@ -224,7 +300,7 @@ export default function RecipeDetailScreen() {
                 What you need ({needIngredients.length})
               </Text>
               {needIngredients.map((ing) => (
-                <RecipeIngredientRow key={ing.id} ingredient={ing} inPantry={false} />
+                <RecipeIngredientRow key={ing.id} ingredient={ing} inPantry={false} scaledQuantity={ing.quantity * scale} />
               ))}
             </>
           )}

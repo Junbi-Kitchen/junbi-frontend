@@ -9,11 +9,18 @@ import type { Ingredient } from '../../types';
 interface RecipeIngredientRowProps {
   ingredient: Ingredient;
   inPantry: boolean;
+  scaledQuantity?: number;
+}
+
+function formatQty(qty: number): string {
+  const rounded = Math.round(qty * 10) / 10;
+  return rounded % 1 === 0 ? String(Math.round(rounded)) : String(rounded);
 }
 
 export function RecipeIngredientRow({
   ingredient,
   inPantry,
+  scaledQuantity,
 }: RecipeIngredientRowProps) {
   return (
     <View
@@ -38,7 +45,7 @@ export function RecipeIngredientRow({
         {ingredient.name}
       </Text>
       <Text className="text-sm text-[#6B7280]">
-        {ingredient.quantity} {ingredient.unit}
+        {scaledQuantity !== undefined ? formatQty(scaledQuantity) : ingredient.quantity} {ingredient.unit}
       </Text>
     </View>
   );

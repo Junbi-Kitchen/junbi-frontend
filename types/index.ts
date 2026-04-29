@@ -65,6 +65,7 @@ export interface Recipe {
   nutrition: Nutrition;
   tags: DietaryTag[];
   cookTimeMinutes: number;
+  servings?: number;
   difficulty: 'easy' | 'medium' | 'hard';
   source: string;
   importedFrom: ImportSource;
