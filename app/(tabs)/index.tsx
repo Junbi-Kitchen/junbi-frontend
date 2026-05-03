@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { Camera, Link2, Bot, ChevronRight } from 'lucide-react-native';
+import { Camera, Link2, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { usePantry } from '../../hooks/usePantry';
 import { useGroceryStore } from '../../stores/groceryStore';
@@ -123,7 +123,6 @@ export default function HomeScreen() {
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
               <ActionBtn icon={Camera} label={COPY.home.actions.scanReceipt} onPress={() => go('/(tabs)/kitchen')} />
               <ActionBtn icon={Link2} label={COPY.home.actions.importRecipe} onPress={() => go('/import')} />
-              <ActionBtn icon={Bot} label={COPY.home.actions.askAgent} onPress={() => go('/(tabs)/chat')} />
             </View>
           </View>
         </Animated.View>
