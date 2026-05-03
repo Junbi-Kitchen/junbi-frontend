@@ -148,7 +148,6 @@ export default function TabLayout() {
         <Tabs.Screen name="kitchen" />
         <Tabs.Screen name="grocery" />
         <Tabs.Screen name="profile" />
-        <Tabs.Screen name="chat" options={{ href: null }} />
       </Tabs>
 
       {/* Global add options sheet */}
