@@ -11,13 +11,13 @@ interface UserStore {
   onboardingComplete: boolean;
   hasSeenOnboarding: boolean;
   setHasSeenOnboarding: (val: boolean) => void;
-  pendingPreferences: { dietaryTags: DietaryTag[]; householdSize: number } | null;
+  pendingPreferences: { dietaryTags: DietaryTag[]; householdSize: number; name?: string } | null;
   setUser: (user: User | null) => void;
   fetchProfile: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: { name?: string; avatar?: string }) => Promise<void>;
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
-  setPendingPreferences: (prefs: { dietaryTags: DietaryTag[]; householdSize: number } | null) => void;
+  setPendingPreferences: (prefs: { dietaryTags: DietaryTag[]; householdSize: number; name?: string } | null) => void;
   completeOnboarding: () => void;
   connectAccount: (platform: string, handle: string) => Promise<void>;
   disconnectAccount: (platform: string) => Promise<void>;

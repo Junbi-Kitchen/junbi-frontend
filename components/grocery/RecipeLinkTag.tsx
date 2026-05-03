@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { UtensilsCrossed } from 'lucide-react-native';
 import { truncate } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 
 interface RecipeLinkTagProps {
@@ -11,12 +12,13 @@ interface RecipeLinkTagProps {
 }
 
 export function RecipeLinkTag({ recipeTitle }: RecipeLinkTagProps) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: TOKENS.colors.accentLight,
+        backgroundColor: colors.accentLight,
         borderRadius: 999,
         paddingHorizontal: 8,
         paddingVertical: 3,
@@ -25,12 +27,12 @@ export function RecipeLinkTag({ recipeTitle }: RecipeLinkTagProps) {
         marginTop: 2,
       }}
     >
-      <UtensilsCrossed size={10} color={TOKENS.colors.accent} />
+      <UtensilsCrossed size={10} color={colors.accent} />
       <Text
         style={{
           fontSize: TOKENS.typography.sizes.xs,
           fontWeight: TOKENS.typography.weights.medium,
-          color: TOKENS.colors.accent,
+          color: colors.accent,
         }}
       >
         {truncate(recipeTitle, 20)}

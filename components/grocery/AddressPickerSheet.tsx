@@ -13,6 +13,7 @@ import {
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Badge } from '../ui/Badge';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { useUserStore } from '../../stores/userStore';
 import type { UserAddress } from '../../types';
@@ -27,6 +28,7 @@ interface AddressPickerSheetProps {
 }
 
 export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
+  const { colors } = useTheme();
   const { user, setDefaultAddress, addAddress } = useUserStore();
   const [adding, setAdding] = useState(false);
   const [newLabel, setNewLabel] = useState('');
@@ -61,12 +63,12 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
   return (
     <View style={{ flex: 1, paddingHorizontal: 20 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 4 }}>
-        <Navigation size={18} color={TOKENS.colors.primary} />
+        <Navigation size={18} color={colors.primary} />
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xl,
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           Your Location
@@ -75,7 +77,7 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
       <Text
         style={{
           fontSize: TOKENS.typography.sizes.sm,
-          color: TOKENS.colors.textSecondary,
+          color: colors.textSecondary,
           marginBottom: 20,
         }}
       >
@@ -98,10 +100,10 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
                 borderRadius: 16,
                 marginBottom: 10,
                 backgroundColor: isSelected
-                  ? TOKENS.colors.primaryMuted
-                  : TOKENS.colors.inputBg,
+                  ? colors.primaryMuted
+                  : colors.inputBg,
                 borderWidth: isSelected ? 2 : 0,
-                borderColor: TOKENS.colors.primary,
+                borderColor: colors.primary,
               }}
             >
               <View
@@ -109,7 +111,7 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
                   width: 40,
                   height: 40,
                   borderRadius: 10,
-                  backgroundColor: isSelected ? TOKENS.colors.primary : TOKENS.colors.border,
+                  backgroundColor: isSelected ? colors.primary : colors.border,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 14,
@@ -117,7 +119,7 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
               >
                 <LabelIcon
                   size={18}
-                  color={isSelected ? TOKENS.colors.white : TOKENS.colors.textSecondary}
+                  color={isSelected ? '#fff' : colors.textSecondary}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -126,7 +128,7 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
                     style={{
                       fontSize: TOKENS.typography.sizes.md,
                       fontWeight: TOKENS.typography.weights.semibold,
-                      color: TOKENS.colors.text,
+                      color: colors.text,
                     }}
                   >
                     {addr.label}
@@ -138,14 +140,14 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
                 <Text
                   style={{
                     fontSize: TOKENS.typography.sizes.sm,
-                    color: TOKENS.colors.textSecondary,
+                    color: colors.textSecondary,
                     marginTop: 2,
                   }}
                 >
                   {addr.street}, {addr.city}, {addr.state} {addr.zip}
                 </Text>
               </View>
-              {isSelected && <Check size={18} color={TOKENS.colors.primary} />}
+              {isSelected && <Check size={18} color={colors.primary} />}
             </TouchableOpacity>
           );
         })}
@@ -165,7 +167,7 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
                   borderRadius: 10,
                   alignItems: 'center',
                   backgroundColor:
-                    newLabel === label ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+                    newLabel === label ? colors.primaryMuted : colors.inputBg,
                 }}
               >
                 <Text
@@ -173,7 +175,7 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
                     fontSize: 13,
                     fontWeight: newLabel === label ? '600' : '400',
                     color:
-                      newLabel === label ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
+                      newLabel === label ? colors.primary : colors.textSecondary,
                   }}
                 >
                   {label}
@@ -213,7 +215,7 @@ export function AddressPickerSheet({ onConfirm }: AddressPickerSheetProps) {
             label="Add New Address"
             variant="ghost"
             onPress={() => setAdding(true)}
-            leftIcon={<Plus size={16} color={TOKENS.colors.text} />}
+            leftIcon={<Plus size={16} color={colors.text} />}
             fullWidth
           />
           <Button label="Confirm" variant="primary" onPress={onConfirm} fullWidth />

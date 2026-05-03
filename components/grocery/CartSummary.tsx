@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { ShoppingCart } from 'lucide-react-native';
 import { Button } from '../ui/Button';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { pluralize } from '../../lib/utils';
 import type { Store } from '../../types';
@@ -21,6 +22,7 @@ export function CartSummary({
   onStartOrder,
   selectedStore,
 }: CartSummaryProps) {
+  const { colors } = useTheme();
   if (uncheckedCount === 0) return null;
 
   const canOrder = Boolean(selectedStore);
@@ -28,9 +30,9 @@ export function CartSummary({
   return (
     <View
       style={{
-        backgroundColor: TOKENS.colors.white,
+        backgroundColor: colors.surface,
         borderTopWidth: 1,
-        borderTopColor: TOKENS.colors.border,
+        borderTopColor: colors.border,
         paddingHorizontal: 20,
         paddingVertical: 16,
         paddingBottom: 32,
@@ -44,13 +46,13 @@ export function CartSummary({
           marginBottom: 12,
         }}
       >
-        <ShoppingCart size={18} color={TOKENS.colors.primary} />
+        <ShoppingCart size={18} color={colors.primary} />
         <Text
           style={{
             flex: 1,
             fontSize: TOKENS.typography.sizes.md,
             fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.text,
+            color: colors.text,
             marginLeft: 8,
           }}
         >
@@ -60,7 +62,7 @@ export function CartSummary({
           style={{
             fontSize: TOKENS.typography.sizes.md,
             fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           ${estimatedTotal.toFixed(2)}
@@ -71,7 +73,7 @@ export function CartSummary({
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.sm,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
             marginBottom: 12,
           }}
         >
@@ -83,7 +85,7 @@ export function CartSummary({
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xs,
-            color: TOKENS.colors.accent,
+            color: colors.accent,
             marginBottom: 8,
           }}
         >

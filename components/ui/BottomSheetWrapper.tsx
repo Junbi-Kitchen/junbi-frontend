@@ -1,14 +1,11 @@
-// Purpose: Thin wrapper around @gorhom/bottom-sheet with backdrop for all modal sheets
-
 import React, { useCallback, useRef } from 'react';
-import { View } from 'react-native';
-import { TOKENS } from '../../lib/tokens';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
   type BottomSheetBackdropProps,
   type BottomSheetProps,
 } from '@gorhom/bottom-sheet';
+import { useTheme } from '../../hooks/useTheme';
 
 interface BottomSheetWrapperProps {
   snapPoints: (string | number)[];
@@ -27,17 +24,13 @@ export function BottomSheetWrapper({
   sheetRef,
   keyboardBehavior,
 }: BottomSheetWrapperProps) {
+  const { colors } = useTheme();
   const internalRef = useRef<BottomSheet>(null);
   const ref = sheetRef ?? internalRef;
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.4}
-      />
+      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
     ),
     []
   );
@@ -51,8 +44,8 @@ export function BottomSheetWrapper({
       backdropComponent={renderBackdrop}
       keyboardBehavior={keyboardBehavior}
       enablePanDownToClose
-      backgroundStyle={{ backgroundColor: TOKENS.colors.white }}
-      handleIndicatorStyle={{ backgroundColor: TOKENS.colors.border, width: 40 }}
+      backgroundStyle={{ backgroundColor: colors.surface }}
+      handleIndicatorStyle={{ backgroundColor: colors.border, width: 40 }}
     >
       <BottomSheetView style={{ flex: 1 }}>
         {children}

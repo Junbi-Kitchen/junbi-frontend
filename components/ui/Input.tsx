@@ -1,8 +1,7 @@
-// Purpose: Styled text input with label, error, and icon slot support
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, TextInputProps } from 'react-native';
-import { cn } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
+import { TOKENS } from '../../lib/tokens';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -27,45 +26,56 @@ export function Input({
   editable = true,
   ...rest
 }: InputProps) {
+  const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
 
   return (
-    <View className="w-full">
+    <View style={{ width: '100%' }}>
       {label && (
-        <Text className="text-sm font-semibold text-[#1A1A1A] mb-1.5">
+        <Text style={{
+          fontSize: TOKENS.typography.sizes.sm,
+          fontWeight: TOKENS.typography.weights.semibold,
+          color: colors.text, marginBottom: 6,
+        }}>
           {label}
         </Text>
       )}
-      <View
-        className={cn(
-          'flex-row items-center rounded-xl bg-[#F5F5F0] px-4',
-          multiline ? 'py-3 items-start' : 'h-12',
-          error && 'border border-[#E63946]',
-          !editable && 'opacity-60'
-        )}
-        style={focused ? { borderWidth: 2, borderColor: '#2D6A4F' } : undefined}
-      >
-        {leftIcon && <View className="mr-2">{leftIcon}</View>}
+      <View style={{
+        flexDirection: 'row', alignItems: multiline ? 'flex-start' : 'center',
+        borderRadius: TOKENS.borderRadius.md,
+        backgroundColor: colors.inputBg,
+        paddingHorizontal: 16,
+        height: multiline ? undefined : 48,
+        paddingVertical: multiline ? 12 : undefined,
+        borderWidth: focused ? 2 : error ? 1 : 0,
+        borderColor: focused ? colors.primary : error ? colors.error : 'transparent',
+        opacity: editable ? 1 : 0.6,
+      }}>
+        {leftIcon && <View style={{ marginRight: 8 }}>{leftIcon}</View>}
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           secureTextEntry={secureTextEntry}
           multiline={multiline}
           editable={editable}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className={cn(
-            'flex-1 text-[#1A1A1A] text-base',
-            multiline && 'min-h-[80px] text-top'
-          )}
+          style={{
+            flex: 1,
+            fontSize: TOKENS.typography.sizes.md,
+            color: colors.text,
+            minHeight: multiline ? 80 : undefined,
+          }}
           {...rest}
         />
-        {rightIcon && <View className="ml-2">{rightIcon}</View>}
+        {rightIcon && <View style={{ marginLeft: 8 }}>{rightIcon}</View>}
       </View>
       {error && (
-        <Text className="text-sm text-[#E63946] mt-1">{error}</Text>
+        <Text style={{ fontSize: TOKENS.typography.sizes.sm, color: colors.error, marginTop: 4 }}>
+          {error}
+        </Text>
       )}
     </View>
   );

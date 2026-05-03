@@ -1,5 +1,3 @@
-// Purpose: Agent tab — 4 AI agents with step-by-step agentic flows
-
 import React, { useState } from 'react';
 import {
   View,
@@ -17,33 +15,31 @@ import Animated, {
   withDelay,
   Easing,
   FadeInDown,
+  FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import {
-  ChefHat,
   CalendarDays,
   ShoppingCart,
-  PiggyBank,
   Sparkles,
   ArrowLeft,
   Check,
   ChevronRight,
   Clock,
-  TrendingUp,
   AlertTriangle,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { TOKENS } from '../../lib/tokens';
 import { COPY } from '../../lib/copy';
+import { useTheme } from '../../hooks/useTheme';
 import { useRecipeStore } from '../../stores/recipeStore';
-import { useSavingsStore } from '../../stores/savingsStore';
 import { useGroceryStore } from '../../stores/groceryStore';
 import { usePantry } from '../../hooks/usePantry';
 import { getDaysUntilExpiry, formatCookTime } from '../../lib/utils';
 
 // ─── Types ──────────────────────────────────────────────────
 
-type AgentId = 'recipe' | 'mealplan' | 'grocery' | 'savings';
+type AgentId = 'mealplan' | 'grocery';
 
 interface AgentDef {
   id: AgentId;
@@ -54,44 +50,29 @@ interface AgentDef {
   bgColor: string;
 }
 
-const AGENTS: AgentDef[] = [
-  {
-    id: 'recipe',
-    label: COPY.agents.list.recipe.label,
-    description: COPY.agents.list.recipe.description,
-    icon: ChefHat,
-    color: TOKENS.colors.primary,
-    bgColor: TOKENS.colors.primaryMuted,
-  },
-  {
-    id: 'mealplan',
-    label: COPY.agents.list.mealplan.label,
-    description: COPY.agents.list.mealplan.description,
-    icon: CalendarDays,
-    color: TOKENS.colors.accent,
-    bgColor: TOKENS.colors.accentLight,
-  },
-  {
-    id: 'grocery',
-    label: COPY.agents.list.grocery.label,
-    description: COPY.agents.list.grocery.description,
-    icon: ShoppingCart,
-    color: TOKENS.colors.primary,
-    bgColor: TOKENS.colors.primaryMuted,
-  },
-  {
-    id: 'savings',
-    label: COPY.agents.list.savings.label,
-    description: COPY.agents.list.savings.description,
-    icon: PiggyBank,
-    color: TOKENS.colors.accent,
-    bgColor: TOKENS.colors.accentLight,
-  },
-];
-
 // ─── Screen ─────────────────────────────────────────────────
 
 export default function AgentScreen() {
+  const { colors } = useTheme();
+
+  const AGENTS: AgentDef[] = [
+    {
+      id: 'mealplan',
+      label: COPY.agents.list.mealplan.label,
+      description: COPY.agents.list.mealplan.description,
+      icon: CalendarDays,
+      color: colors.accent,
+      bgColor: colors.accentLight,
+    },
+    {
+      id: 'grocery',
+      label: COPY.agents.list.grocery.label,
+      description: COPY.agents.list.grocery.description,
+      icon: ShoppingCart,
+      color: colors.primary,
+      bgColor: colors.primaryMuted,
+    },
+  ];
   const [activeAgent, setActiveAgent] = useState<AgentId | null>(null);
   const [step, setStep] = useState(0);
 
@@ -103,11 +84,8 @@ export default function AgentScreen() {
 
   const handleBack = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (step > 0) {
-      setStep(step - 1);
-    } else {
-      setActiveAgent(null);
-    }
+    if (step > 0) setStep(step - 1);
+    else setActiveAgent(null);
   };
 
   const handleNext = async () => {
@@ -116,119 +94,79 @@ export default function AgentScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
       {activeAgent ? (
-        <AgentFlow
-          agentId={activeAgent}
-          step={step}
-          onBack={handleBack}
-          onNext={handleNext}
-        />
+        <AgentFlow agentId={activeAgent} step={step} onBack={handleBack} onNext={handleNext} agents={AGENTS} />
       ) : (
-        <AgentPicker onSelect={handleSelect} />
+        <AgentPicker onSelect={handleSelect} agents={AGENTS} />
       )}
     </SafeAreaView>
   );
 }
 
-// ─── Agent picker (home state) ──────────────────────────────
+// ─── Agent picker ────────────────────────────────────────────
 
-function AgentPicker({ onSelect }: { onSelect: (id: AgentId) => void }) {
+function AgentPicker({ onSelect, agents }: { onSelect: (id: AgentId) => void; agents: AgentDef[] }) {
+  const { colors } = useTheme();
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 8 }}
-    >
+    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}>
+      <Animated.View entering={FadeInUp.duration(400)} style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              backgroundColor: TOKENS.colors.primaryMuted,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Sparkles size={16} color={TOKENS.colors.primary} />
+          <View style={{
+            width: 32, height: 32, borderRadius: 10,
+            backgroundColor: colors.primaryMuted,
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Sparkles size={16} color={colors.primary} />
           </View>
-          <Text
-            style={{
-              fontSize: TOKENS.typography.sizes['2xl'],
-              fontWeight: TOKENS.typography.weights.bold,
-              color: TOKENS.colors.text,
-            }}
-          >
+          <Text style={{ fontSize: TOKENS.typography.sizes['2xl'], fontWeight: TOKENS.typography.weights.bold, color: colors.text }}>
             {COPY.agents.screenTitle}
           </Text>
         </View>
-        <Text
-          style={{
-            fontSize: TOKENS.typography.sizes.sm,
-            color: TOKENS.colors.textSecondary,
-            lineHeight: 20,
-          }}
-        >
+        <Text style={{ fontSize: TOKENS.typography.sizes.sm, color: colors.textSecondary, lineHeight: 20 }}>
           {COPY.agents.screenSubtitle}
         </Text>
-      </View>
+      </Animated.View>
 
       {/* Agent cards */}
       <View style={{ paddingHorizontal: 20, gap: 12 }}>
-        {AGENTS.map((agent, idx) => {
+        {agents.map((agent, idx) => {
           const Icon = agent.icon;
           return (
-            <Animated.View key={agent.id} entering={FadeInDown.delay(idx * 80).springify()}>
+            <Animated.View key={agent.id} entering={FadeInDown.delay(idx * 100).springify()}>
               <TouchableOpacity
                 onPress={() => onSelect(agent.id)}
                 accessibilityLabel={`${agent.label}: ${agent.description}`}
+                activeOpacity={0.85}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 14,
-                  padding: 16,
-                  borderRadius: 16,
-                  backgroundColor: TOKENS.colors.white,
+                  padding: 18,
+                  borderRadius: TOKENS.borderRadius.card,
+                  backgroundColor: colors.surface,
                   borderWidth: 1,
-                  borderColor: TOKENS.colors.borderLight,
+                  borderColor: colors.borderLight,
+                  ...TOKENS.shadows.sm,
                 }}
               >
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 14,
-                    backgroundColor: agent.bgColor,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Icon size={22} color={agent.color} />
+                <View style={{
+                  width: 52, height: 52, borderRadius: 16,
+                  backgroundColor: idx === 0 ? colors.accentLight : colors.primaryMuted,
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={24} color={idx === 0 ? colors.accent : colors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: TOKENS.typography.sizes.md,
-                      fontWeight: TOKENS.typography.weights.semibold,
-                      color: TOKENS.colors.text,
-                    }}
-                  >
+                  <Text style={{ fontSize: TOKENS.typography.sizes.md, fontWeight: TOKENS.typography.weights.semibold, color: colors.text }}>
                     {agent.label}
                   </Text>
-                  <Text
-                    style={{
-                      fontSize: TOKENS.typography.sizes.sm,
-                      color: TOKENS.colors.textSecondary,
-                      marginTop: 2,
-                    }}
-                  >
+                  <Text style={{ fontSize: TOKENS.typography.sizes.sm, color: colors.textSecondary, marginTop: 3 }}>
                     {agent.description}
                   </Text>
                 </View>
-                <ChevronRight size={18} color={TOKENS.colors.textMuted} />
+                <ChevronRight size={18} color={colors.textMuted} />
               </TouchableOpacity>
             </Animated.View>
           );
@@ -238,207 +176,136 @@ function AgentPicker({ onSelect }: { onSelect: (id: AgentId) => void }) {
   );
 }
 
-// ─── Agent flow router ──────────────────────────────────────
+// ─── Agent flow router ───────────────────────────────────────
 
-function AgentFlow({
-  agentId,
-  step,
-  onBack,
-  onNext,
-}: {
-  agentId: AgentId;
-  step: number;
-  onBack: () => void;
-  onNext: () => void;
+function AgentFlow({ agentId, step, onBack, onNext, agents }: {
+  agentId: AgentId; step: number; onBack: () => void; onNext: () => void; agents: AgentDef[];
 }) {
-  const agent = AGENTS.find((a) => a.id === agentId)!;
+  const { colors } = useTheme();
+  const agent = agents.find((a) => a.id === agentId)!;
+  const iconColor = agentId === 'mealplan' ? colors.accent : colors.primary;
+  const iconBg = agentId === 'mealplan' ? colors.accentLight : colors.primaryMuted;
 
   return (
     <View style={{ flex: 1 }}>
       {/* Agent header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 12,
-          paddingHorizontal: 20,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: TOKENS.colors.borderLight,
-          backgroundColor: TOKENS.colors.white,
-        }}
-      >
+      <View style={{
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        paddingHorizontal: 20, paddingVertical: 14,
+        borderBottomWidth: 1, borderBottomColor: colors.borderLight,
+        backgroundColor: colors.surface,
+      }}>
         <TouchableOpacity
           onPress={onBack}
           accessibilityLabel="Go back"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            backgroundColor: TOKENS.colors.inputBg,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+          style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: colors.inputBg, alignItems: 'center', justifyContent: 'center' }}
         >
-          <ArrowLeft size={16} color={TOKENS.colors.text} />
+          <ArrowLeft size={16} color={colors.text} />
         </TouchableOpacity>
-        <View
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            backgroundColor: agent.bgColor,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <agent.icon size={14} color={agent.color} />
+        <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: iconBg, alignItems: 'center', justifyContent: 'center' }}>
+          <agent.icon size={14} color={iconColor} />
         </View>
-        <Text
-          style={{
-            flex: 1,
-            fontSize: TOKENS.typography.sizes.md,
-            fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.text,
-          }}
-        >
+        <Text style={{ flex: 1, fontSize: TOKENS.typography.sizes.md, fontWeight: TOKENS.typography.weights.semibold, color: colors.text }}>
           {agent.label}
         </Text>
       </View>
 
-      {/* Flow content */}
+      {/* Flow */}
       <View style={{ flex: 1 }}>
-        {agentId === 'recipe' && <RecipeFinderFlow step={step} onNext={onNext} />}
         {agentId === 'mealplan' && <MealPlannerFlow step={step} onNext={onNext} />}
         {agentId === 'grocery' && <SmartGroceryFlow step={step} onNext={onNext} />}
-        {agentId === 'savings' && <SavingsCoachFlow step={step} onNext={onNext} />}
       </View>
     </View>
   );
 }
 
-// ─── Step indicator ─────────────────────────────────────────
+// ─── Step indicator ──────────────────────────────────────────
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
+  const { colors } = useTheme();
   return (
     <View style={{ flexDirection: 'row', gap: 6, marginBottom: 20 }}>
       {Array.from({ length: total }).map((_, i) => (
-        <View
-          key={i}
-          style={{
-            flex: 1,
-            height: 3,
-            borderRadius: 2,
-            backgroundColor: i <= current ? TOKENS.colors.primary : TOKENS.colors.borderLight,
-          }}
-        />
+        <View key={i} style={{
+          flex: 1, height: 3, borderRadius: 2,
+          backgroundColor: i <= current ? colors.primary : colors.borderLight,
+        }} />
       ))}
     </View>
   );
 }
 
-// ─── AI message bubble ──────────────────────────────────────
+// ─── AI message bubble ───────────────────────────────────────
 
 function AiBubble({ text, delay = 0 }: { text: string; delay?: number }) {
+  const { colors } = useTheme();
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(400).springify()}>
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: 10,
-          marginBottom: 16,
-        }}
-      >
-        <View
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            backgroundColor: TOKENS.colors.primaryMuted,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginTop: 2,
-          }}
-        >
-          <Sparkles size={13} color={TOKENS.colors.primary} />
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+        <View style={{
+          width: 28, height: 28, borderRadius: 8,
+          backgroundColor: colors.primaryMuted, alignItems: 'center', justifyContent: 'center', marginTop: 2,
+        }}>
+          <Sparkles size={13} color={colors.primary} />
         </View>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: TOKENS.colors.inputBg,
-            borderRadius: 16,
-            borderTopLeftRadius: 4,
-            paddingHorizontal: 14,
-            paddingVertical: 12,
-          }}
-        >
-          <Text style={{ fontSize: 15, lineHeight: 22, color: TOKENS.colors.text }}>
-            {text}
-          </Text>
+        <View style={{
+          flex: 1, backgroundColor: colors.inputBg,
+          borderRadius: 16, borderTopLeftRadius: 4,
+          paddingHorizontal: 14, paddingVertical: 12,
+        }}>
+          <Text style={{ fontSize: 15, lineHeight: 22, color: colors.text }}>{text}</Text>
         </View>
       </View>
     </Animated.View>
   );
 }
 
-// ─── CTA button ─────────────────────────────────────────────
+// ─── CTA button ──────────────────────────────────────────────
 
-function CtaButton({ label, onPress, variant = 'primary' }: { label: string; onPress: () => void; variant?: 'primary' | 'secondary' }) {
+function CtaButton({ label, onPress, variant = 'primary' }: {
+  label: string; onPress: () => void; variant?: 'primary' | 'secondary';
+}) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
       accessibilityLabel={label}
+      activeOpacity={0.85}
       style={{
-        paddingVertical: 14,
-        borderRadius: 12,
-        alignItems: 'center',
-        backgroundColor: variant === 'primary' ? TOKENS.colors.primary : TOKENS.colors.white,
+        paddingVertical: 14, borderRadius: 12, alignItems: 'center',
+        backgroundColor: variant === 'primary' ? colors.primary : colors.surface,
         borderWidth: variant === 'secondary' ? 1 : 0,
-        borderColor: TOKENS.colors.border,
+        borderColor: colors.border,
       }}
     >
-      <Text
-        style={{
-          fontSize: TOKENS.typography.sizes.md,
-          fontWeight: TOKENS.typography.weights.semibold,
-          color: variant === 'primary' ? TOKENS.colors.white : TOKENS.colors.text,
-        }}
-      >
+      <Text style={{
+        fontSize: TOKENS.typography.sizes.md, fontWeight: TOKENS.typography.weights.semibold,
+        color: variant === 'primary' ? '#fff' : colors.text,
+      }}>
         {label}
       </Text>
     </TouchableOpacity>
   );
 }
 
-// ─── Typing dots ────────────────────────────────────────────
+// ─── Typing dots ─────────────────────────────────────────────
 
 function TypingDots() {
+  const { colors } = useTheme();
   return (
     <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-      <View
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 8,
-          backgroundColor: TOKENS.colors.primaryMuted,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginTop: 2,
-        }}
-      >
-        <Sparkles size={13} color={TOKENS.colors.primary} />
+      <View style={{
+        width: 28, height: 28, borderRadius: 8,
+        backgroundColor: colors.primaryMuted, alignItems: 'center', justifyContent: 'center', marginTop: 2,
+      }}>
+        <Sparkles size={13} color={colors.primary} />
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: 4,
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          borderRadius: 16,
-          borderTopLeftRadius: 4,
-          backgroundColor: TOKENS.colors.inputBg,
-        }}
-      >
+      <View style={{
+        flexDirection: 'row', gap: 4,
+        paddingHorizontal: 16, paddingVertical: 14,
+        borderRadius: 16, borderTopLeftRadius: 4,
+        backgroundColor: colors.inputBg,
+      }}>
         <PulsingDot delay={0} />
         <PulsingDot delay={150} />
         <PulsingDot delay={300} />
@@ -448,269 +315,24 @@ function TypingDots() {
 }
 
 function PulsingDot({ delay }: { delay: number }) {
+  const { colors } = useTheme();
   const opacity = useSharedValue(0.3);
-
   React.useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withRepeat(
-        withTiming(1, { duration: 400, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true
-      )
-    );
+    opacity.value = withDelay(delay, withRepeat(withTiming(1, { duration: 400, easing: Easing.inOut(Easing.ease) }), -1, true));
   }, [delay, opacity]);
-
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.View
-      style={[
-        { width: 7, height: 7, borderRadius: 4, backgroundColor: TOKENS.colors.textMuted },
-        style,
-      ]}
-    />
-  );
+  return <Animated.View style={[{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.textMuted }, style]} />;
 }
 
 // ═══════════════════════════════════════════════════════════
-// RECIPE FINDER FLOW
-// Step 0: Show expiring items, ask what to cook with
-// Step 1: "Thinking..." then show 3 recipe suggestions
-// Step 2: Recipe selected — show detail + add missing to grocery
-// ═══════════════════════════════════════════════════════════
-
-function RecipeFinderFlow({ step, onNext }: { step: number; onNext: () => void }) {
-  const router = useRouter();
-  const { items, expiringItems } = usePantry();
-  const recipes = useRecipeStore((s) => s.saved);
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-  const [isThinking, setIsThinking] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-
-  const urgent = [...expiringItems].sort((a, b) =>
-    getDaysUntilExpiry(a.expiryDate ?? '') - getDaysUntilExpiry(b.expiryDate ?? '')
-  ).slice(0, 6);
-
-  const toggleIngredient = (name: string) => {
-    setSelectedIngredients((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
-    );
-  };
-
-  const handleFindRecipes = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setIsThinking(true);
-    setTimeout(() => {
-      setIsThinking(false);
-      setShowResults(true);
-    }, 1500);
-  };
-
-  // Match recipes by selected ingredients
-  const matched = recipes.filter((r) =>
-    r.ingredients.some((ing) =>
-      selectedIngredients.some((sel) =>
-        ing.name.toLowerCase().includes(sel.toLowerCase()) ||
-        sel.toLowerCase().includes(ing.name.toLowerCase())
-      )
-    )
-  ).slice(0, 3);
-
-  // Pad with extras if needed
-  const suggestions = matched.length >= 3 ? matched : [
-    ...matched,
-    ...recipes.filter((r) => !matched.some((m) => m.id === r.id)).slice(0, 3 - matched.length),
-  ];
-
-  // Thinking state
-  if (isThinking) {
-    return (
-      <View style={{ flex: 1, padding: 20 }}>
-        <StepIndicator current={1} total={3} />
-        <TypingDots />
-        <AiBubble text={COPY.agents.recipeFinder.thinking} delay={400} />
-      </View>
-    );
-  }
-
-  // Results state
-  if (showResults) {
-    return (
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-        <StepIndicator current={1} total={3} />
-
-        <AiBubble
-          text={selectedIngredients.length > 0
-            ? COPY.agents.recipeFinder.resultsWithIngredients(suggestions.length, selectedIngredients.join(', '))
-            : COPY.agents.recipeFinder.resultsGeneric(suggestions.length)
-          }
-        />
-
-        <View style={{ gap: 10 }}>
-          {suggestions.map((recipe, idx) => (
-            <Animated.View key={recipe.id} entering={FadeInDown.delay(200 + idx * 100).springify()}>
-              <TouchableOpacity
-                onPress={() => router.push(`/recipe/${recipe.id}`)}
-                accessibilityLabel={`Open ${recipe.title}`}
-                style={{
-                  flexDirection: 'row',
-                  backgroundColor: TOKENS.colors.white,
-                  borderRadius: 14,
-                  overflow: 'hidden',
-                  borderWidth: 1,
-                  borderColor: TOKENS.colors.borderLight,
-                }}
-              >
-                <Image
-                  source={{ uri: recipe.imageUri }}
-                  style={{ width: 80, height: 80 }}
-                />
-                <View style={{ flex: 1, padding: 12, justifyContent: 'center' }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontSize: 15,
-                      fontWeight: '600',
-                      color: TOKENS.colors.text,
-                    }}
-                  >
-                    {recipe.title}
-                  </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                    <Clock size={12} color={TOKENS.colors.textSecondary} />
-                    <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>
-                      {formatCookTime(recipe.cookTimeMinutes)}
-                    </Text>
-                  </View>
-                </View>
-                <View style={{ justifyContent: 'center', paddingRight: 12 }}>
-                  <ChevronRight size={16} color={TOKENS.colors.textMuted} />
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </View>
-      </ScrollView>
-    );
-  }
-
-  // Default: ingredient selection
-  return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-      <StepIndicator current={0} total={3} />
-
-      <AiBubble
-        text={urgent.length > 0
-          ? COPY.agents.recipeFinder.promptExpiring(urgent.length)
-          : COPY.agents.recipeFinder.promptGeneric
-        }
-      />
-
-      {/* Expiring ingredient chips */}
-      {urgent.length > 0 && (
-        <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-            {urgent.map((item) => {
-              const days = getDaysUntilExpiry(item.expiryDate ?? '');
-              const isSelected = selectedIngredients.includes(item.name);
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => toggleIngredient(item.name)}
-                  accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.name}`}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 6,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 999,
-                    backgroundColor: isSelected ? TOKENS.colors.primaryMuted : TOKENS.colors.white,
-                    borderWidth: 1,
-                    borderColor: isSelected ? TOKENS.colors.primary : TOKENS.colors.borderLight,
-                  }}
-                >
-                  {isSelected && <Check size={14} color={TOKENS.colors.primary} />}
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: isSelected ? '600' : '400',
-                      color: isSelected ? TOKENS.colors.primary : TOKENS.colors.text,
-                    }}
-                  >
-                    {item.name}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      color: days <= 2 ? TOKENS.colors.error : TOKENS.colors.warning,
-                    }}
-                  >
-                    {days}d
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Animated.View>
-      )}
-
-      {/* Other pantry items */}
-      {items.filter((i) => !urgent.some((u) => u.id === i.id)).length > 0 && (
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
-            {COPY.agents.recipeFinder.otherIngredients}
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
-            {items.filter((i) => !urgent.some((u) => u.id === i.id)).slice(0, 8).map((item) => {
-              const isSelected = selectedIngredients.includes(item.name);
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => toggleIngredient(item.name)}
-                  accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.name}`}
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 999,
-                    backgroundColor: isSelected ? TOKENS.colors.primaryMuted : TOKENS.colors.white,
-                    borderWidth: 1,
-                    borderColor: isSelected ? TOKENS.colors.primary : TOKENS.colors.borderLight,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: isSelected ? '600' : '400',
-                      color: isSelected ? TOKENS.colors.primary : TOKENS.colors.text,
-                    }}
-                  >
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Animated.View>
-      )}
-
-      <CtaButton
-        label={COPY.agents.recipeFinder.findBtn(selectedIngredients.length)}
-        onPress={handleFindRecipes}
-      />
-    </ScrollView>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════
-// MEAL PLANNER FLOW
-// Step 0: Configure (budget, # days, preferences)
+// MEAL PLANNER (Planning Agent)
+// Step 0: Configure (budget, # days)
 // Step 1: "Planning..." then show week plan
-// Step 2: Confirm — add missing items to grocery
+// Step 2: Confirm — view grocery
 // ═══════════════════════════════════════════════════════════
 
 function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void }) {
+  const { colors } = useTheme();
   const recipes = useRecipeStore((s) => s.saved);
   const router = useRouter();
   const [budget, setBudget] = useState<number>(80);
@@ -720,34 +342,27 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
 
   const budgetOptions = [40, 60, 80, 100];
   const dayOptions = [3, 5, 7];
-
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  // Mock plan: assign recipes to days
   const plan = dayLabels.slice(0, days).map((day, i) => ({
     day,
-    recipe: recipes[i % recipes.length],
+    recipe: recipes[i % Math.max(recipes.length, 1)],
   }));
 
   const handleGenerate = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsPlanning(true);
-    setTimeout(() => {
-      setIsPlanning(false);
-      setPlanReady(true);
-    }, 2000);
+    setTimeout(() => { setIsPlanning(false); setPlanReady(true); }, 2000);
   };
 
   if (step === 0 && !isPlanning && !planReady) {
     return (
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={0} total={3} />
-
         <AiBubble text={COPY.agents.mealPlanner.prompt} />
 
-        {/* Budget selector */}
         <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
             {COPY.agents.mealPlanner.budgetLabel}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
@@ -757,22 +372,13 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
                 onPress={() => setBudget(b)}
                 accessibilityLabel={`Set budget to $${b}`}
                 style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  backgroundColor: budget === b ? TOKENS.colors.primary : TOKENS.colors.white,
+                  flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+                  backgroundColor: budget === b ? colors.primary : colors.surface,
                   borderWidth: budget === b ? 0 : 1,
-                  borderColor: TOKENS.colors.borderLight,
+                  borderColor: colors.borderLight,
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: '600',
-                    color: budget === b ? TOKENS.colors.white : TOKENS.colors.text,
-                  }}
-                >
+                <Text style={{ fontSize: 15, fontWeight: '600', color: budget === b ? '#fff' : colors.text }}>
                   ${b}
                 </Text>
               </TouchableOpacity>
@@ -780,9 +386,8 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
           </View>
         </Animated.View>
 
-        {/* Days selector */}
         <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
             {COPY.agents.mealPlanner.daysLabel}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8, marginBottom: 28 }}>
@@ -792,23 +397,14 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
                 onPress={() => setDays(d)}
                 accessibilityLabel={`Plan for ${d} days`}
                 style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  backgroundColor: days === d ? TOKENS.colors.primary : TOKENS.colors.white,
+                  flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+                  backgroundColor: days === d ? colors.primary : colors.surface,
                   borderWidth: days === d ? 0 : 1,
-                  borderColor: TOKENS.colors.borderLight,
+                  borderColor: colors.borderLight,
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: '600',
-                    color: days === d ? TOKENS.colors.white : TOKENS.colors.text,
-                  }}
-                >
-                  {d} days
+                <Text style={{ fontSize: 15, fontWeight: '600', color: days === d ? '#fff' : colors.text }}>
+                  {d}d
                 </Text>
               </TouchableOpacity>
             ))}
@@ -834,7 +430,6 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
     return (
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={2} total={3} />
-
         <AiBubble text={COPY.agents.mealPlanner.ready(days, budget)} />
 
         <View style={{ gap: 8, marginBottom: 20 }}>
@@ -842,37 +437,26 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
             <Animated.View key={day} entering={FadeInDown.delay(200 + idx * 80).springify()}>
               <TouchableOpacity
                 onPress={() => recipe && router.push(`/recipe/${recipe.id}`)}
-                accessibilityLabel={`${day}: ${recipe?.title ?? 'No recipe'}`}
+                accessibilityLabel={`${day}: ${recipe?.title ?? 'Rest day'}`}
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: TOKENS.colors.white,
-                  borderRadius: 12,
-                  padding: 12,
-                  borderWidth: 1,
-                  borderColor: TOKENS.colors.borderLight,
+                  flexDirection: 'row', alignItems: 'center',
+                  backgroundColor: colors.surface,
+                  borderRadius: 12, padding: 12,
+                  borderWidth: 1, borderColor: colors.borderLight,
                 }}
               >
-                <View
-                  style={{
-                    width: 40,
-                    alignItems: 'center',
-                    marginRight: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: TOKENS.colors.primary }}>
-                    {day}
-                  </Text>
+                <View style={{ width: 40, alignItems: 'center', marginRight: 12 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>{day}</Text>
                 </View>
                 {recipe?.imageUri ? (
                   <Image source={{ uri: recipe.imageUri }} style={{ width: 44, height: 44, borderRadius: 10, marginRight: 10 }} />
                 ) : null}
                 <View style={{ flex: 1 }}>
-                  <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '600', color: TOKENS.colors.text }}>
+                  <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '600', color: colors.text }}>
                     {recipe?.title ?? 'Rest day'}
                   </Text>
                   {recipe && (
-                    <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary, marginTop: 2 }}>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                       {formatCookTime(recipe.cookTimeMinutes)}
                     </Text>
                   )}
@@ -893,13 +477,14 @@ function MealPlannerFlow({ step, onNext }: { step: number; onNext: () => void })
 }
 
 // ═══════════════════════════════════════════════════════════
-// SMART GROCERY FLOW
+// SMART GROCERY (Grocery Agent)
 // Step 0: Show pantry gaps + expiring items
 // Step 1: AI-built grocery list
 // Step 2: Confirm + send to store
 // ═══════════════════════════════════════════════════════════
 
 function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }) {
+  const { colors } = useTheme();
   const { items, expiringItems } = usePantry();
   const groceryItems = useGroceryStore((s) => s.items);
   const router = useRouter();
@@ -907,8 +492,6 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
   const [listReady, setListReady] = useState(false);
 
   const unchecked = groceryItems.filter((i) => !i.checked);
-
-  // Mock suggested items based on common staples missing from pantry
   const pantryNames = items.map((i) => i.name.toLowerCase());
   const suggestions = [
     'Olive oil', 'Garlic', 'Onions', 'Rice', 'Salt', 'Eggs', 'Butter', 'Milk',
@@ -917,72 +500,52 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
   const handleBuildList = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsBuilding(true);
-    setTimeout(() => {
-      setIsBuilding(false);
-      setListReady(true);
-    }, 1800);
+    setTimeout(() => { setIsBuilding(false); setListReady(true); }, 1800);
   };
 
   if (step === 0 && !isBuilding && !listReady) {
     return (
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={0} total={3} />
-
         <AiBubble text={COPY.agents.smartGrocery.prompt(items.length)} />
 
-        {/* Current pantry summary */}
         <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <View
-            style={{
-              backgroundColor: TOKENS.colors.white,
-              borderRadius: 14,
-              padding: 16,
-              borderWidth: 1,
-              borderColor: TOKENS.colors.borderLight,
-              marginBottom: 12,
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-              <View style={{ alignItems: 'center', flex: 1 }}>
-                <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.text }}>{items.length}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.smartGrocery.stats.inPantry}</Text>
-              </View>
-              <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
-              <View style={{ alignItems: 'center', flex: 1 }}>
-                <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.warning }}>{expiringItems.length}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.smartGrocery.stats.expiring}</Text>
-              </View>
-              <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
-              <View style={{ alignItems: 'center', flex: 1 }}>
-                <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.primary }}>{unchecked.length}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.smartGrocery.stats.onList}</Text>
-              </View>
+          <View style={{
+            backgroundColor: colors.surface, borderRadius: 14, padding: 16,
+            borderWidth: 1, borderColor: colors.borderLight, marginBottom: 12,
+          }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              {([
+                { val: items.length, label: COPY.agents.smartGrocery.stats.inPantry, color: colors.text },
+                { val: expiringItems.length, label: COPY.agents.smartGrocery.stats.expiring, color: colors.warning },
+                { val: unchecked.length, label: COPY.agents.smartGrocery.stats.onList, color: colors.primary },
+              ] as const).map((stat, i) => (
+                <React.Fragment key={stat.label}>
+                  {i > 0 && <View style={{ width: 1, backgroundColor: colors.borderLight }} />}
+                  <View style={{ alignItems: 'center', flex: 1 }}>
+                    <Text style={{ fontSize: 22, fontWeight: '700', color: stat.color }}>{stat.val}</Text>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary }}>{stat.label}</Text>
+                  </View>
+                </React.Fragment>
+              ))}
             </View>
           </View>
         </Animated.View>
 
-        {/* What's missing */}
         {suggestions.length > 0 && (
           <Animated.View entering={FadeInDown.delay(300).springify()}>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: TOKENS.colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
               {COPY.agents.smartGrocery.stapleslabel}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
               {suggestions.map((item) => (
-                <View
-                  key={item}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 999,
-                    backgroundColor: TOKENS.colors.warningLight,
-                  }}
-                >
-                  <AlertTriangle size={12} color={TOKENS.colors.warning} />
-                  <Text style={{ fontSize: 13, color: TOKENS.colors.text }}>{item}</Text>
+                <View key={item} style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 4,
+                  paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+                  backgroundColor: colors.warningLight,
+                }}>
+                  <AlertTriangle size={12} color={colors.warning} />
+                  <Text style={{ fontSize: 13, color: colors.text }}>{item}</Text>
                 </View>
               ))}
             </View>
@@ -1005,57 +568,32 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
   }
 
   if (listReady || step >= 1) {
-    const allItems = [...suggestions.map((name) => ({ name, isNew: true })), ...unchecked.map((i) => ({ name: i.name, isNew: false }))];
+    const allItems = [
+      ...suggestions.map((name) => ({ name, isNew: true })),
+      ...unchecked.map((i) => ({ name: i.name, isNew: false })),
+    ];
 
     return (
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <StepIndicator current={2} total={3} />
-
         <AiBubble text={COPY.agents.smartGrocery.ready(allItems.length)} />
 
-        <View
-          style={{
-            backgroundColor: TOKENS.colors.white,
-            borderRadius: 14,
-            padding: 14,
-            borderWidth: 1,
-            borderColor: TOKENS.colors.borderLight,
-            marginBottom: 20,
-            gap: 4,
-          }}
-        >
+        <View style={{
+          backgroundColor: colors.surface, borderRadius: 14, padding: 14,
+          borderWidth: 1, borderColor: colors.borderLight, marginBottom: 20, gap: 4,
+        }}>
           {allItems.map((item, i) => (
             <Animated.View key={`${item.name}-${i}`} entering={FadeInDown.delay(150 + i * 50).springify()}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                  paddingVertical: 10,
-                  borderBottomWidth: i < allItems.length - 1 ? 1 : 0,
-                  borderBottomColor: TOKENS.colors.borderLight,
-                }}
-              >
-                <View
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 5,
-                    borderWidth: 1.5,
-                    borderColor: TOKENS.colors.border,
-                  }}
-                />
-                <Text style={{ flex: 1, fontSize: 15, color: TOKENS.colors.text }}>{item.name}</Text>
+              <View style={{
+                flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10,
+                borderBottomWidth: i < allItems.length - 1 ? 1 : 0,
+                borderBottomColor: colors.borderLight,
+              }}>
+                <View style={{ width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: colors.border }} />
+                <Text style={{ flex: 1, fontSize: 15, color: colors.text }}>{item.name}</Text>
                 {item.isNew && (
-                  <View
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 999,
-                      backgroundColor: TOKENS.colors.primaryMuted,
-                    }}
-                  >
-                    <Text style={{ fontSize: 10, fontWeight: '600', color: TOKENS.colors.primary }}>NEW</Text>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.primaryMuted }}>
+                    <Text style={{ fontSize: 10, fontWeight: '600', color: colors.primary }}>NEW</Text>
                   </View>
                 )}
               </View>
@@ -1069,166 +607,4 @@ function SmartGroceryFlow({ step, onNext }: { step: number; onNext: () => void }
   }
 
   return null;
-}
-
-// ═══════════════════════════════════════════════════════════
-// SAVINGS COACH FLOW
-// Step 0: Show savings overview + stats
-// Step 1: Tips to reduce waste
-// Step 2: Share your progress
-// ═══════════════════════════════════════════════════════════
-
-function SavingsCoachFlow({ step, onNext }: { step: number; onNext: () => void }) {
-  const savings = useSavingsStore();
-  const [showTips, setShowTips] = useState(false);
-
-  const usedCount = savings.wasteLog.filter((e) => e.action === 'used').length;
-  const tossedCount = savings.wasteLog.filter((e) => e.action === 'tossed').length;
-  const savingsRate = usedCount + tossedCount > 0
-    ? Math.round((usedCount / (usedCount + tossedCount)) * 100)
-    : 100;
-
-  const tips = COPY.agents.savingsCoach.tips;
-
-  if (step === 0 && !showTips) {
-    return (
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-        <StepIndicator current={0} total={2} />
-
-        <AiBubble
-          text={savingsRate >= 80
-            ? COPY.agents.savingsCoach.promptGood(savingsRate)
-            : COPY.agents.savingsCoach.promptImprove(savingsRate)
-          }
-        />
-
-        {/* Stats cards */}
-        <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <View
-            style={{
-              backgroundColor: TOKENS.colors.white,
-              borderRadius: 16,
-              padding: 20,
-              borderWidth: 1,
-              borderColor: TOKENS.colors.borderLight,
-              marginBottom: 12,
-            }}
-          >
-            {/* Main savings */}
-            <View style={{ alignItems: 'center', marginBottom: 20 }}>
-              <Text style={{ fontSize: 40, fontWeight: '700', color: TOKENS.colors.accent }}>
-                ${savings.totalSavedThisMonth.toFixed(0)}
-              </Text>
-              <Text style={{ fontSize: 14, color: TOKENS.colors.textSecondary, marginTop: 2 }}>
-                {COPY.agents.savingsCoach.stats.savedThisMonth}
-              </Text>
-            </View>
-
-            {/* Stat row */}
-            <View style={{ flexDirection: 'row' }}>
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: TOKENS.colors.success }}>{usedCount}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.itemsUsed}</Text>
-              </View>
-              <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: TOKENS.colors.error }}>{tossedCount}</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.itemsWasted}</Text>
-              </View>
-              <View style={{ width: 1, backgroundColor: TOKENS.colors.borderLight }} />
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: TOKENS.colors.primary }}>{savingsRate}%</Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.saveRate}</Text>
-              </View>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* All-time */}
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: TOKENS.colors.primaryMuted,
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 12,
-            }}
-          >
-            <View>
-              <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.allTimeSavings}</Text>
-              <Text style={{ fontSize: 22, fontWeight: '700', color: TOKENS.colors.primary, marginTop: 2 }}>
-                ${savings.totalSavedAllTime.toFixed(0)}
-              </Text>
-            </View>
-            <TrendingUp size={24} color={TOKENS.colors.primary} />
-          </View>
-        </Animated.View>
-
-        {/* vs last month */}
-        <Animated.View entering={FadeInDown.delay(400).springify()}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: TOKENS.colors.accentLight,
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 24,
-            }}
-          >
-            <View>
-              <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>{COPY.agents.savingsCoach.stats.vsLastMonth}</Text>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: TOKENS.colors.accent, marginTop: 2 }}>
-                {savings.totalSavedThisMonth >= savings.lastMonthSaved ? '+' : ''}
-                ${(savings.totalSavedThisMonth - savings.lastMonthSaved).toFixed(0)}
-              </Text>
-            </View>
-            <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary }}>
-              {COPY.agents.savingsCoach.stats.lastMonth(savings.lastMonthSaved.toFixed(0))}
-            </Text>
-          </View>
-        </Animated.View>
-
-        <CtaButton label={COPY.agents.savingsCoach.tipsBtn} onPress={() => setShowTips(true)} />
-      </ScrollView>
-    );
-  }
-
-  // Tips view
-  return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-      <StepIndicator current={1} total={2} />
-
-      <AiBubble text="Here are my top tips based on your usage patterns:" />
-
-      <View style={{ gap: 10, marginBottom: 24 }}>
-        {tips.map((tip, idx) => (
-          <Animated.View key={tip.title} entering={FadeInDown.delay(200 + idx * 100).springify()}>
-            <View
-              style={{
-                backgroundColor: TOKENS.colors.white,
-                borderRadius: 12,
-                padding: 14,
-                borderWidth: 1,
-                borderColor: TOKENS.colors.borderLight,
-              }}
-            >
-              <Text style={{ fontSize: 15, fontWeight: '600', color: TOKENS.colors.text, marginBottom: 4 }}>
-                {tip.title}
-              </Text>
-              <Text style={{ fontSize: 13, lineHeight: 19, color: TOKENS.colors.textSecondary }}>
-                {tip.desc}
-              </Text>
-            </View>
-          </Animated.View>
-        ))}
-      </View>
-
-      <AiBubble text="Keep using items before they expire and you'll easily save $200+ this month!" delay={600} />
-    </ScrollView>
-  );
 }

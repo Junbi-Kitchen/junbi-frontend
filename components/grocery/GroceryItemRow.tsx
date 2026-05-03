@@ -10,6 +10,7 @@ import Animated, {
 import { Check } from 'lucide-react-native';
 import { SwipeableRow } from '../ui/SwipeableRow';
 import { RecipeLinkTag } from './RecipeLinkTag';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import type { GroceryItem } from '../../types';
 
@@ -24,6 +25,7 @@ export function GroceryItemRow({
   onToggle,
   onDelete,
 }: GroceryItemRowProps) {
+  const { colors } = useTheme();
   const checkScale = useSharedValue(item.checked ? 1 : 0);
 
   useEffect(() => {
@@ -45,9 +47,9 @@ export function GroceryItemRow({
           alignItems: 'center',
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: TOKENS.colors.white,
+          backgroundColor: colors.surface,
           borderBottomWidth: 1,
-          borderBottomColor: TOKENS.colors.borderLight,
+          borderBottomColor: colors.borderLight,
           opacity: item.checked ? 0.5 : 1,
         }}
       >
@@ -61,10 +63,10 @@ export function GroceryItemRow({
             borderRadius: 12,
             borderWidth: 2,
             borderColor: item.checked
-              ? TOKENS.colors.primary
-              : TOKENS.colors.border,
+              ? colors.primary
+              : colors.border,
             backgroundColor: item.checked
-              ? TOKENS.colors.primary
+              ? colors.primary
               : 'transparent',
             alignItems: 'center',
             justifyContent: 'center',
@@ -82,7 +84,7 @@ export function GroceryItemRow({
             style={{
               fontSize: TOKENS.typography.sizes.md,
               fontWeight: TOKENS.typography.weights.medium,
-              color: TOKENS.colors.text,
+              color: colors.text,
               textDecorationLine: item.checked ? 'line-through' : 'none',
             }}
           >
@@ -91,7 +93,7 @@ export function GroceryItemRow({
           <Text
             style={{
               fontSize: TOKENS.typography.sizes.sm,
-              color: TOKENS.colors.textSecondary,
+              color: colors.textSecondary,
               marginTop: 1,
             }}
           >

@@ -14,6 +14,7 @@ import { X } from 'lucide-react-native';
 import { SkeletonLoader } from '../ui/SkeletonLoader';
 import { Button } from '../ui/Button';
 import { TOKENS } from '../../lib/tokens';
+import { useTheme } from '../../hooks/useTheme';
 import { useReceiptScanner } from '../../hooks/useReceiptScanner';
 import type { PantryItem } from '../../types';
 
@@ -23,6 +24,7 @@ interface ReceiptScanModalProps {
 }
 
 export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
+  const { colors } = useTheme();
   const {
     hasPermission,
     isScanning,
@@ -128,7 +130,7 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
         {scanResult ? (
           <View
             style={{
-              backgroundColor: TOKENS.colors.white,
+              backgroundColor: colors.surface,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               padding: 20,
@@ -139,7 +141,7 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
               style={{
                 fontSize: 18,
                 fontWeight: '700',
-                color: TOKENS.colors.text,
+                color: colors.text,
                 marginBottom: 4,
               }}
             >
@@ -148,7 +150,7 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
             <Text
               style={{
                 fontSize: 14,
-                color: TOKENS.colors.textSecondary,
+                color: colors.textSecondary,
                 marginBottom: 16,
               }}
             >
@@ -163,13 +165,13 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
                     justifyContent: 'space-between',
                     paddingVertical: 10,
                     borderBottomWidth: 1,
-                    borderBottomColor: TOKENS.colors.borderLight,
+                    borderBottomColor: colors.borderLight,
                   }}
                 >
-                  <Text style={{ fontSize: 15, color: TOKENS.colors.text }}>
+                  <Text style={{ fontSize: 15, color: colors.text }}>
                     {item.name}
                   </Text>
-                  <Text style={{ fontSize: 14, color: TOKENS.colors.textSecondary }}>
+                  <Text style={{ fontSize: 14, color: colors.textSecondary }}>
                     {item.quantity} {item.unit}
                   </Text>
                 </View>

@@ -24,6 +24,7 @@ import { useGroceryList } from '../../hooks/useGroceryList';
 import { useRecipeStore } from '../../stores/recipeStore';
 import { useUserStore } from '../../stores/userStore';
 import { recipesApi } from '../../lib/api/recipes';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { COPY } from '../../lib/copy';
 import { formatCookTime, pluralize } from '../../lib/utils';
@@ -39,6 +40,7 @@ const { height: H } = Dimensions.get('window');
 const HERO_HEIGHT = 320;
 
 export default function RecipeDetailScreen() {
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const scrollY = new Animated.Value(0);
@@ -83,7 +85,7 @@ export default function RecipeDetailScreen() {
 
   if (loading || !recipe) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ padding: 16, gap: 12 }}>
           <SkeletonLoader width="100%" height={HERO_HEIGHT} borderRadius={0} />
           <SkeletonLoader width="60%" height={32} borderRadius={8} />
@@ -105,7 +107,7 @@ export default function RecipeDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Back button */}
       <TouchableOpacity
         onPress={() => router.back()}
@@ -154,7 +156,7 @@ export default function RecipeDetailScreen() {
             style={{
               fontSize: TOKENS.typography.sizes['2xl'],
               fontWeight: TOKENS.typography.weights.bold,
-              color: TOKENS.colors.text,
+              color: colors.text,
               marginBottom: 8,
             }}
           >
@@ -165,7 +167,7 @@ export default function RecipeDetailScreen() {
           <Text
             style={{
               fontSize: TOKENS.typography.sizes.sm,
-              color: TOKENS.colors.textSecondary,
+              color: colors.textSecondary,
               marginBottom: 4,
             }}
           >
@@ -175,7 +177,7 @@ export default function RecipeDetailScreen() {
           <Text
             style={{
               fontSize: TOKENS.typography.sizes.sm,
-              color: TOKENS.colors.textSecondary,
+              color: colors.textSecondary,
               marginBottom: 20,
               lineHeight: 22,
             }}
@@ -186,7 +188,7 @@ export default function RecipeDetailScreen() {
           {/* Cook settings */}
           <View
             style={{
-              backgroundColor: TOKENS.colors.white,
+              backgroundColor: colors.surface,
               borderRadius: 16,
               padding: 16,
               marginBottom: 20,
@@ -194,13 +196,13 @@ export default function RecipeDetailScreen() {
             }}
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: TOKENS.colors.text }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text }}>
                 {COPY.recipe.portions}
               </Text>
               <StepperInput value={portions} onChange={setPortions} min={1} max={12} unit="servings" />
             </View>
-            <View style={{ height: 1, backgroundColor: TOKENS.colors.border, marginBottom: 14 }} />
-            <Text style={{ fontSize: 15, fontWeight: '600', color: TOKENS.colors.text, marginBottom: 10 }}>
+            <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 14 }} />
+            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text, marginBottom: 10 }}>
               {COPY.recipe.dietaryRestrictions}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -215,15 +217,15 @@ export default function RecipeDetailScreen() {
                       paddingHorizontal: 12,
                       paddingVertical: 6,
                       borderRadius: 999,
-                      backgroundColor: active ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+                      backgroundColor: active ? colors.primaryMuted : colors.inputBg,
                       borderWidth: active ? 1.5 : 0,
-                      borderColor: TOKENS.colors.primary,
+                      borderColor: colors.primary,
                     }}
                   >
                     <Text style={{
                       fontSize: 13,
                       fontWeight: '500',
-                      color: active ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
+                      color: active ? colors.primary : colors.textSecondary,
                       textTransform: 'capitalize',
                     }}>
                       {tag}
@@ -242,7 +244,7 @@ export default function RecipeDetailScreen() {
           {/* Nutrition */}
           <View
             style={{
-              backgroundColor: TOKENS.colors.white,
+              backgroundColor: colors.surface,
               borderRadius: 16,
               padding: 16,
               marginBottom: 24,
@@ -257,7 +259,7 @@ export default function RecipeDetailScreen() {
             style={{
               fontSize: TOKENS.typography.sizes.lg,
               fontWeight: TOKENS.typography.weights.bold,
-              color: TOKENS.colors.text,
+              color: colors.text,
               marginBottom: 12,
             }}
           >
@@ -270,7 +272,7 @@ export default function RecipeDetailScreen() {
                 style={{
                   fontSize: TOKENS.typography.sizes.sm,
                   fontWeight: TOKENS.typography.weights.semibold,
-                  color: TOKENS.colors.primary,
+                  color: colors.primary,
                   marginBottom: 8,
                   textTransform: 'uppercase',
                   letterSpacing: 0.5,
@@ -290,7 +292,7 @@ export default function RecipeDetailScreen() {
                 style={{
                   fontSize: TOKENS.typography.sizes.sm,
                   fontWeight: TOKENS.typography.weights.semibold,
-                  color: TOKENS.colors.textSecondary,
+                  color: colors.textSecondary,
                   marginBottom: 8,
                   marginTop: 12,
                   textTransform: 'uppercase',
@@ -310,7 +312,7 @@ export default function RecipeDetailScreen() {
             style={{
               fontSize: TOKENS.typography.sizes.lg,
               fontWeight: TOKENS.typography.weights.bold,
-              color: TOKENS.colors.text,
+              color: colors.text,
               marginTop: 24,
               marginBottom: 12,
             }}
@@ -331,9 +333,9 @@ export default function RecipeDetailScreen() {
             bottom: 0,
             left: 0,
             right: 0,
-            backgroundColor: TOKENS.colors.white,
+            backgroundColor: colors.surface,
             borderTopWidth: 1,
-            borderTopColor: TOKENS.colors.border,
+            borderTopColor: colors.border,
             padding: 16,
             paddingBottom: 32,
           }}

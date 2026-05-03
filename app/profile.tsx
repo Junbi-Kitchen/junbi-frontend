@@ -9,10 +9,12 @@ import {
   Switch,
   Alert,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { BottomSheetWrapper } from '../components/ui/BottomSheetWrapper';
+import { AddressPickerSheet } from '../components/grocery/AddressPickerSheet';
 import { DietaryTagRow } from '../components/recipe/DietaryTagRow';
 import { RecipeCardMini } from '../components/recipe/RecipeCardMini';
 import { Badge } from '../components/ui/Badge';
@@ -21,6 +23,8 @@ import { Button } from '../components/ui/Button';
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import { useUserStore } from '../stores/userStore';
 import { useRecipeStore } from '../stores/recipeStore';
+import { useTheme } from '../hooks/useTheme';
+import { useThemeStore } from '../stores/themeStore';
 import { TOKENS } from '../lib/tokens';
 import { APP } from '../lib/constants';
 import { COPY } from '../lib/copy';
@@ -33,9 +37,12 @@ const ALL_TAGS: DietaryTag[] = [
 ];
 
 export default function ProfileScreen() {
+  const { colors } = useTheme();
+  const { mode, setMode } = useThemeStore();
   const router = useRouter();
   const editTagsSheetRef = useRef<BottomSheet>(null);
-  const { preferences, toggleTag, hasTag, isConnected } =
+  const addressSheetRef = useRef<BottomSheet>(null);
+  const { preferences, updateDietaryTags, hasTag, isConnected } =
     useUserPreferences();
   const { user, signOut } = useUserStore();
   const { saved: savedRecipes } = useRecipeStore();
@@ -58,7 +65,7 @@ export default function ProfileScreen() {
     .toUpperCase() ?? 'U';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       {/* Header with back button */}
       <View
         style={{
@@ -75,14 +82,14 @@ export default function ProfileScreen() {
             width: 36,
             height: 36,
             borderRadius: 12,
-            backgroundColor: TOKENS.colors.white,
+            backgroundColor: colors.surface,
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 1,
-            borderColor: TOKENS.colors.borderLight,
+            borderColor: colors.borderLight,
           }}
         >
-          <ChevronLeft size={20} color={TOKENS.colors.text} />
+          <ChevronLeft size={20} color={colors.text} />
         </TouchableOpacity>
         <Text
           style={{
@@ -90,7 +97,7 @@ export default function ProfileScreen() {
             textAlign: 'center',
             fontSize: TOKENS.typography.sizes.lg,
             fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.text,
+            color: colors.text,
             marginRight: 36,
           }}
         >
@@ -107,7 +114,7 @@ export default function ProfileScreen() {
                 width: 80,
                 height: 80,
                 borderRadius: 40,
-                backgroundColor: TOKENS.colors.primaryMuted,
+                backgroundColor: colors.primaryMuted,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 12,
@@ -117,7 +124,7 @@ export default function ProfileScreen() {
                 style={{
                   fontSize: 28,
                   fontWeight: '700',
-                  color: TOKENS.colors.primary,
+                  color: colors.primary,
                 }}
               >
                 {initials}
@@ -127,7 +134,7 @@ export default function ProfileScreen() {
               style={{
                 fontSize: TOKENS.typography.sizes.xl,
                 fontWeight: TOKENS.typography.weights.bold,
-                color: TOKENS.colors.text,
+                color: colors.text,
               }}
             >
               {user?.name}
@@ -135,7 +142,7 @@ export default function ProfileScreen() {
             <Text
               style={{
                 fontSize: TOKENS.typography.sizes.sm,
-                color: TOKENS.colors.textSecondary,
+                color: colors.textSecondary,
                 marginTop: 4,
               }}
             >
@@ -153,7 +160,7 @@ export default function ProfileScreen() {
             {preferences?.dietaryTags && preferences.dietaryTags.length > 0 ? (
               <DietaryTagRow tags={preferences.dietaryTags} />
             ) : (
-              <Text style={{ color: TOKENS.colors.textSecondary, fontSize: 14 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
                 No dietary preferences set
               </Text>
             )}
@@ -179,7 +186,7 @@ export default function ProfileScreen() {
                     style={{
                       fontSize: TOKENS.typography.sizes.md,
                       fontWeight: TOKENS.typography.weights.medium,
-                      color: TOKENS.colors.text,
+                      color: colors.text,
                     }}
                   >
                     {connectedCount > 0
@@ -189,20 +196,20 @@ export default function ProfileScreen() {
                   <Text
                     style={{
                       fontSize: TOKENS.typography.sizes.sm,
-                      color: TOKENS.colors.textSecondary,
+                      color: colors.textSecondary,
                       marginTop: 2,
                     }}
                   >
                     Instagram, TikTok, Instacart
                   </Text>
                 </View>
-                <ChevronRight size={20} color={TOKENS.colors.textMuted} />
+                <ChevronRight size={20} color={colors.textMuted} />
               </View>
             </Card>
           </TouchableOpacity>
 
           {/* Addresses */}
-          <SectionHeader title="Saved Addresses" />
+          <SectionHeader title="Saved Addresses" action="Add" onAction={() => addressSheetRef.current?.expand()} />
           <Card padding="md" style={{ marginBottom: 20 }}>
             {user?.addresses && user.addresses.length > 0 ? (
               user.addresses.map((addr, idx) => (
@@ -213,26 +220,26 @@ export default function ProfileScreen() {
                     alignItems: 'center',
                     paddingVertical: 10,
                     borderBottomWidth: idx < user.addresses.length - 1 ? 1 : 0,
-                    borderBottomColor: TOKENS.colors.borderLight,
+                    borderBottomColor: colors.borderLight,
                   }}
                 >
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '600', color: TOKENS.colors.text }}>
+                      <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text }}>
                         {addr.label}
                       </Text>
                       {addr.id === user.defaultAddressId && (
                         <Badge label="Default" variant="success" size="sm" />
                       )}
                     </View>
-                    <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary, marginTop: 2 }}>
+                    <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
                       {addr.street}, {addr.city}
                     </Text>
                   </View>
                 </View>
               ))
             ) : (
-              <Text style={{ color: TOKENS.colors.textSecondary, fontSize: 14 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
                 No addresses saved
               </Text>
             )}
@@ -263,6 +270,35 @@ export default function ProfileScreen() {
           <Card padding="md" style={{ marginBottom: 16 }}>
             <SettingRow label="Notifications" hasToggle />
             <SettingRow label="Units" value="Imperial" hasBorder />
+            {/* Appearance */}
+            <View style={{ paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.borderLight }}>
+              <Text style={{ fontSize: 15, fontWeight: '500', color: colors.text, marginBottom: 10 }}>
+                Appearance
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {(['light', 'dark', 'system'] as const).map((m) => (
+                  <TouchableOpacity
+                    key={m}
+                    onPress={() => setMode(m)}
+                    accessibilityLabel={`Set theme to ${m}`}
+                    style={{
+                      flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center',
+                      backgroundColor: mode === m ? colors.primary : colors.inputBg,
+                      borderWidth: mode === m ? 0 : 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: 13, fontWeight: '600',
+                      color: mode === m ? '#fff' : colors.text,
+                      textTransform: 'capitalize',
+                    }}>
+                      {m}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
             <SettingRow label={COPY.profile.about(APP.name)} />
           </Card>
 
@@ -276,6 +312,11 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
+      {/* Add address sheet */}
+      <BottomSheetWrapper sheetRef={addressSheetRef} snapPoints={['70%']} initialIndex={-1}>
+        <AddressPickerSheet onConfirm={() => addressSheetRef.current?.close()} />
+      </BottomSheetWrapper>
+
       {/* Edit tags sheet */}
       <BottomSheetWrapper
         sheetRef={editTagsSheetRef}
@@ -287,43 +328,43 @@ export default function ProfileScreen() {
             style={{
               fontSize: 20,
               fontWeight: '700',
-              color: TOKENS.colors.text,
+              color: colors.text,
               marginBottom: 16,
             }}
           >
             Edit Dietary Preferences
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 }}>
-            {ALL_TAGS.map((tag) => (
-              <TouchableOpacity
-                key={tag}
-                onPress={() => toggleTag(tag)}
-                accessibilityLabel={`${hasTag(tag) ? 'Remove' : 'Add'} ${tag}`}
-                style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 999,
-                  backgroundColor: hasTag(tag)
-                    ? TOKENS.colors.primaryMuted
-                    : TOKENS.colors.inputBg,
-                  borderWidth: hasTag(tag) ? 2 : 0,
-                  borderColor: TOKENS.colors.primary,
-                }}
-              >
-                <Text
+            {ALL_TAGS.map((tag) => {
+              const selected = hasTag(tag);
+              return (
+                <TouchableOpacity
+                  key={tag}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    selected ? updateDietaryTags([]) : updateDietaryTags([tag]);
+                  }}
+                  accessibilityLabel={`${selected ? 'Remove' : 'Select'} ${tag}`}
                   style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: hasTag(tag)
-                      ? TOKENS.colors.primary
-                      : TOKENS.colors.textSecondary,
-                    textTransform: 'capitalize',
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                    backgroundColor: selected ? colors.primary : colors.inputBg,
                   }}
                 >
-                  {tag}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: selected ? '#fff' : colors.textSecondary,
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {tag}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
           <Button
             label="Done"
@@ -346,6 +387,7 @@ function SectionHeader({
   action?: string;
   onAction?: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
@@ -359,7 +401,7 @@ function SectionHeader({
         style={{
           fontSize: TOKENS.typography.sizes.sm,
           fontWeight: TOKENS.typography.weights.semibold,
-          color: TOKENS.colors.textSecondary,
+          color: colors.textSecondary,
           textTransform: 'uppercase',
           letterSpacing: 0.5,
         }}
@@ -372,7 +414,7 @@ function SectionHeader({
             style={{
               fontSize: TOKENS.typography.sizes.sm,
               fontWeight: TOKENS.typography.weights.semibold,
-              color: TOKENS.colors.primary,
+              color: colors.primary,
             }}
           >
             {action}
@@ -394,6 +436,7 @@ function SettingRow({
   hasToggle?: boolean;
   hasBorder?: boolean;
 }) {
+  const { colors } = useTheme();
   const [enabled, setEnabled] = useState(true);
   return (
     <View
@@ -402,7 +445,7 @@ function SettingRow({
         alignItems: 'center',
         paddingVertical: 12,
         borderBottomWidth: hasBorder ? 1 : 0,
-        borderBottomColor: TOKENS.colors.borderLight,
+        borderBottomColor: colors.borderLight,
       }}
     >
       <Text
@@ -410,13 +453,13 @@ function SettingRow({
           flex: 1,
           fontSize: 15,
           fontWeight: '500',
-          color: TOKENS.colors.text,
+          color: colors.text,
         }}
       >
         {label}
       </Text>
       {value && (
-        <Text style={{ fontSize: 14, color: TOKENS.colors.textSecondary }}>
+        <Text style={{ fontSize: 14, color: colors.textSecondary }}>
           {value}
         </Text>
       )}
@@ -425,10 +468,10 @@ function SettingRow({
           value={enabled}
           onValueChange={setEnabled}
           trackColor={{
-            false: TOKENS.colors.border,
-            true: TOKENS.colors.primaryLight,
+            false: colors.border,
+            true: colors.primaryLight,
           }}
-          thumbColor={enabled ? TOKENS.colors.primary : TOKENS.colors.white}
+          thumbColor={enabled ? colors.primary : colors.surface}
         />
       )}
     </View>

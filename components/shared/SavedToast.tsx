@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Text, View } from 'react-native';
 import { Sparkles } from 'lucide-react-native';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 
 interface SavedToastProps {
@@ -21,6 +22,7 @@ interface SavedToastProps {
 }
 
 export function SavedToast({ amount, visible, onDismiss }: SavedToastProps) {
+  const { colors } = useTheme();
   const translateY = useSharedValue(-100);
   const opacity = useSharedValue(0);
 
@@ -64,8 +66,8 @@ export function SavedToast({ amount, visible, onDismiss }: SavedToastProps) {
           paddingHorizontal: 20,
           paddingVertical: 14,
           borderRadius: 14,
-          backgroundColor: TOKENS.colors.success,
-          shadowColor: TOKENS.colors.success,
+          backgroundColor: colors.success,
+          shadowColor: colors.success,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,
@@ -74,9 +76,9 @@ export function SavedToast({ amount, visible, onDismiss }: SavedToastProps) {
         animatedStyle,
       ]}
     >
-      <Sparkles size={20} color={TOKENS.colors.white} />
+      <Sparkles size={20} color={'#fff'} />
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: TOKENS.colors.white }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>
           +${amount.toFixed(2)} saved!
         </Text>
         <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 1 }}>

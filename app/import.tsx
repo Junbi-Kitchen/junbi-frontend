@@ -21,6 +21,7 @@ import { Badge } from '../components/ui/Badge';
 import { DietaryTagRow } from '../components/recipe/DietaryTagRow';
 import { useRecipeStore } from '../stores/recipeStore';
 import { recipesApi } from '../lib/api/recipes';
+import { useTheme } from '../hooks/useTheme';
 import { TOKENS } from '../lib/tokens';
 import type { DietaryTag, ImportSource, Recipe } from '../types';
 
@@ -47,6 +48,7 @@ const SOURCE_ICONS = {
 
 export default function ImportScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { addToImportQueue } = useRecipeStore();
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState<Recipe | null>(null);
@@ -93,7 +95,7 @@ export default function ImportScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View
         style={{
@@ -108,13 +110,13 @@ export default function ImportScreen() {
           accessibilityLabel="Go back"
           style={{ marginRight: 12 }}
         >
-          <ChevronLeft size={24} color={TOKENS.colors.text} />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xl,
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           Import Recipe
@@ -138,13 +140,13 @@ export default function ImportScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.url?.message}
-                leftIcon={<SourceIcon size={18} color={TOKENS.colors.textSecondary} />}
+                leftIcon={<SourceIcon size={18} color={colors.textSecondary} />}
                 rightIcon={
                   <TouchableOpacity
                     onPress={pasteFromClipboard}
                     accessibilityLabel="Paste from clipboard"
                   >
-                    <ClipboardIcon size={18} color={TOKENS.colors.primary} />
+                    <ClipboardIcon size={18} color={colors.primary} />
                   </TouchableOpacity>
                 }
               />
@@ -180,7 +182,7 @@ export default function ImportScreen() {
                 width: '100%',
                 height: 200,
                 borderRadius: 16,
-                backgroundColor: TOKENS.colors.border,
+                backgroundColor: colors.border,
                 marginBottom: 16,
                 overflow: 'hidden',
               }}
@@ -192,7 +194,7 @@ export default function ImportScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ color: TOKENS.colors.textSecondary }}>
+                <Text style={{ color: colors.textSecondary }}>
                   Image Preview
                 </Text>
               </View>
@@ -217,7 +219,7 @@ export default function ImportScreen() {
               style={{
                 fontSize: TOKENS.typography.sizes.md,
                 fontWeight: TOKENS.typography.weights.semibold,
-                color: TOKENS.colors.text,
+                color: colors.text,
                 marginTop: 20,
                 marginBottom: 10,
               }}
@@ -232,11 +234,11 @@ export default function ImportScreen() {
                   justifyContent: 'space-between',
                   paddingVertical: 8,
                   borderBottomWidth: 1,
-                  borderBottomColor: TOKENS.colors.borderLight,
+                  borderBottomColor: colors.borderLight,
                 }}
               >
-                <Text style={{ fontSize: 14, color: TOKENS.colors.text }}>{ing.name}</Text>
-                <Text style={{ fontSize: 14, color: TOKENS.colors.textSecondary }}>
+                <Text style={{ fontSize: 14, color: colors.text }}>{ing.name}</Text>
+                <Text style={{ fontSize: 14, color: colors.textSecondary }}>
                   {ing.quantity} {ing.unit}
                 </Text>
               </View>
@@ -247,7 +249,7 @@ export default function ImportScreen() {
               style={{
                 fontSize: TOKENS.typography.sizes.md,
                 fontWeight: TOKENS.typography.weights.semibold,
-                color: TOKENS.colors.text,
+                color: colors.text,
                 marginTop: 20,
                 marginBottom: 10,
               }}

@@ -1,14 +1,8 @@
-// Purpose: Primary button primitive with variants, sizes, loading state, and haptic feedback
-
 import React from 'react';
-import {
-  TouchableOpacity,
-  ActivityIndicator,
-  View,
-  Text,
-} from 'react-native';
+import { TouchableOpacity, ActivityIndicator, View, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { cn } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
+import { TOKENS } from '../../lib/tokens';
 
 interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -20,35 +14,11 @@ interface ButtonProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
+  style?: object;
 }
 
-const BASE = 'flex-row items-center justify-center rounded-xl';
-
-const VARIANTS = {
-  primary: 'bg-[#2D6A4F] active:opacity-80',
-  secondary: 'bg-[#D8F3DC] active:opacity-80',
-  ghost: 'bg-transparent border border-[#E8E8E3] active:opacity-70',
-  danger: 'bg-[#E63946] active:opacity-80',
-};
-
-const TEXT_VARIANTS = {
-  primary: 'text-white font-semibold',
-  secondary: 'text-[#2D6A4F] font-semibold',
-  ghost: 'text-[#1A1A1A] font-medium',
-  danger: 'text-white font-semibold',
-};
-
-const SIZES = {
-  sm: 'px-4 py-2',
-  md: 'px-5 py-3',
-  lg: 'px-6 py-4',
-};
-
-const TEXT_SIZES = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-lg',
-};
+const SIZE_PADDING = { sm: { px: 16, py: 8 }, md: { px: 20, py: 12 }, lg: { px: 24, py: 16 } };
+const TEXT_SIZE = { sm: TOKENS.typography.sizes.sm, md: TOKENS.typography.sizes.md, lg: TOKENS.typography.sizes.lg };
 
 export function Button({
   variant = 'primary',
@@ -60,11 +30,30 @@ export function Button({
   leftIcon,
   rightIcon,
   fullWidth = false,
+  style,
 }: ButtonProps) {
+  const { colors } = useTheme();
+
   const handlePress = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
   };
+
+  const bgColor = {
+    primary: colors.primary,
+    secondary: colors.primaryMuted,
+    ghost: 'transparent',
+    danger: colors.error,
+  }[variant];
+
+  const textColor = {
+    primary: '#fff',
+    secondary: colors.primary,
+    ghost: colors.text,
+    danger: '#fff',
+  }[variant];
+
+  const { px, py } = SIZE_PADDING[size];
 
   return (
     <TouchableOpacity
@@ -72,26 +61,26 @@ export function Button({
       disabled={disabled || loading}
       accessibilityLabel={label}
       accessibilityRole="button"
-      className={cn(
-        BASE,
-        VARIANTS[variant],
-        SIZES[size],
-        fullWidth && 'w-full',
-        (disabled || loading) && 'opacity-50'
-      )}
+      style={[{
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        borderRadius: TOKENS.borderRadius.md,
+        backgroundColor: bgColor,
+        paddingHorizontal: px, paddingVertical: py,
+        borderWidth: variant === 'ghost' ? 1 : 0,
+        borderColor: colors.border,
+        width: fullWidth ? '100%' : undefined,
+        opacity: disabled || loading ? 0.5 : 1,
+      }, style]}
     >
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : '#2D6A4F'}
-        />
+        <ActivityIndicator size="small" color={variant === 'primary' || variant === 'danger' ? '#fff' : colors.primary} />
       ) : (
         <>
-          {leftIcon && <View className="mr-2">{leftIcon}</View>}
-          <Text className={cn(TEXT_VARIANTS[variant], TEXT_SIZES[size])}>
+          {leftIcon && <View style={{ marginRight: 8 }}>{leftIcon}</View>}
+          <Text style={{ fontSize: TEXT_SIZE[size], fontWeight: '600', color: textColor }}>
             {label}
           </Text>
-          {rightIcon && <View className="ml-2">{rightIcon}</View>}
+          {rightIcon && <View style={{ marginLeft: 8 }}>{rightIcon}</View>}
         </>
       )}
     </TouchableOpacity>

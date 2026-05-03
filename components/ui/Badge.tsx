@@ -1,8 +1,7 @@
-// Purpose: Pill badge for dietary tags, status info, warnings, and success states
-
 import React from 'react';
 import { View, Text } from 'react-native';
-import { cn } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
+import { TOKENS } from '../../lib/tokens';
 import { getTagColor, getTagTextColor } from '../../lib/utils';
 import type { DietaryTag } from '../../types';
 
@@ -13,50 +12,60 @@ interface BadgeProps {
   tag?: DietaryTag;
 }
 
-const VARIANT_BG = {
-  dietary: '',
-  info: 'bg-blue-100',
-  warning: 'bg-[#FEF3C7]',
-  success: 'bg-[#D8F3DC]',
-};
-
-const VARIANT_TEXT = {
-  dietary: '',
-  info: 'text-blue-700',
-  warning: 'text-[#F59E0B]',
-  success: 'text-[#2D6A4F]',
-};
-
 const SIZE_PADDING = {
-  sm: 'px-2 py-0.5',
-  md: 'px-3 py-1',
+  sm: { paddingHorizontal: 8, paddingVertical: 2 },
+  md: { paddingHorizontal: 12, paddingVertical: 4 },
 };
 
 const SIZE_TEXT = {
-  sm: 'text-xs',
-  md: 'text-sm',
+  sm: TOKENS.typography.sizes.xs,
+  md: TOKENS.typography.sizes.sm,
 };
 
 export function Badge({ label, variant = 'info', size = 'sm', tag }: BadgeProps) {
-  const bgClass =
-    variant === 'dietary' && tag
-      ? getTagColor(tag)
-      : VARIANT_BG[variant];
+  const { colors } = useTheme();
 
-  const textClass =
-    variant === 'dietary' && tag
-      ? getTagTextColor(tag)
-      : VARIANT_TEXT[variant];
+  const VARIANT_BG = {
+    dietary: 'transparent',
+    info: colors.primaryMuted,
+    warning: colors.warningLight,
+    success: colors.successLight,
+  };
+
+  const VARIANT_TEXT_COLOR = {
+    dietary: colors.text,
+    info: colors.primary,
+    warning: colors.warning,
+    success: colors.success,
+  };
+
+  const bgColor = variant === 'dietary' && tag ? undefined : VARIANT_BG[variant];
+  const textColor = variant === 'dietary' && tag ? undefined : VARIANT_TEXT_COLOR[variant];
+
+  if (variant === 'dietary' && tag) {
+    return (
+      <View
+        className={`rounded-full flex-row items-center ${getTagColor(tag)}`}
+        style={SIZE_PADDING[size]}
+      >
+        <Text className={`font-semibold ${getTagTextColor(tag)}`} style={{ fontSize: SIZE_TEXT[size] }}>
+          {label}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View
-      className={cn(
-        'rounded-full flex-row items-center',
-        bgClass,
-        SIZE_PADDING[size]
-      )}
+      style={{
+        borderRadius: 999,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: bgColor,
+        ...SIZE_PADDING[size],
+      }}
     >
-      <Text className={cn('font-semibold', textClass, SIZE_TEXT[size])}>
+      <Text style={{ fontWeight: '600', color: textColor, fontSize: SIZE_TEXT[size] }}>
         {label}
       </Text>
     </View>

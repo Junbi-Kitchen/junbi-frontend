@@ -6,6 +6,7 @@ import { BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-shee
 import { StepperInput } from '../ui/StepperInput';
 import { Button } from '../ui/Button';
 import { TOKENS } from '../../lib/tokens';
+import { useTheme } from '../../hooks/useTheme';
 import { usePantry } from '../../hooks/usePantry';
 import { pantryApi } from '../../lib/api/pantry';
 import type { IngredientCategory } from '../../types';
@@ -19,6 +20,7 @@ interface ManualAddSheetProps {
 }
 
 export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
+  const { colors } = useTheme();
   const { addItem } = usePantry();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Suggestion | null>(null);
@@ -73,7 +75,7 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
           style={{
             fontSize: TOKENS.typography.sizes.xl,
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
             marginBottom: 16,
           }}
         >
@@ -85,24 +87,24 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
             flexDirection: 'row',
             alignItems: 'center',
             borderRadius: 12,
-            backgroundColor: TOKENS.colors.inputBg,
+            backgroundColor: colors.inputBg,
             height: 48,
             paddingHorizontal: 16,
           }}
         >
           <BottomSheetTextInput
             placeholder="Search or type an ingredient..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textMuted}
             value={search}
             onChangeText={(t) => { setSearch(t); setSelected(null); }}
-            style={{ flex: 1, fontSize: 16, color: TOKENS.colors.text }}
+            style={{ flex: 1, fontSize: 16, color: colors.text }}
           />
         </View>
 
         {/* Suggestions dropdown */}
         {isSearching && (
           <View style={{ alignItems: 'center', paddingVertical: 12 }}>
-            <ActivityIndicator size="small" color={TOKENS.colors.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
           </View>
         )}
 
@@ -122,13 +124,13 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
                   paddingHorizontal: 8,
                   borderRadius: 10,
                   borderBottomWidth: 1,
-                  borderBottomColor: TOKENS.colors.border,
+                  borderBottomColor: colors.border,
                 }}
               >
-                <Text style={{ fontSize: TOKENS.typography.sizes.md, color: TOKENS.colors.text }}>
+                <Text style={{ fontSize: TOKENS.typography.sizes.md, color: colors.text }}>
                   {item.name}
                 </Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary, textTransform: 'capitalize' }}>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, textTransform: 'capitalize' }}>
                   {item.category}
                 </Text>
               </TouchableOpacity>
@@ -138,7 +140,7 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
 
         {/* Quantity & unit — shown once user has typed/selected something */}
         {canAdd && (
-          <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: TOKENS.colors.border, marginTop: 8 }}>
+          <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 8 }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -151,7 +153,7 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
                 style={{
                   fontSize: TOKENS.typography.sizes.sm,
                   fontWeight: TOKENS.typography.weights.semibold,
-                  color: TOKENS.colors.textSecondary,
+                  color: colors.textSecondary,
                   textTransform: 'uppercase',
                 }}
               >
@@ -164,7 +166,7 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
               style={{
                 fontSize: TOKENS.typography.sizes.sm,
                 fontWeight: TOKENS.typography.weights.semibold,
-                color: TOKENS.colors.textSecondary,
+                color: colors.textSecondary,
                 textTransform: 'uppercase',
                 marginBottom: 8,
               }}
@@ -185,14 +187,14 @@ export function ManualAddSheet({ onClose }: ManualAddSheetProps) {
                     paddingHorizontal: 14,
                     paddingVertical: 8,
                     borderRadius: 999,
-                    backgroundColor: unit === u ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+                    backgroundColor: unit === u ? colors.primaryMuted : colors.inputBg,
                   }}
                 >
                   <Text
                     style={{
                       fontSize: 13,
                       fontWeight: '500',
-                      color: unit === u ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
+                      color: unit === u ? colors.primary : colors.textSecondary,
                     }}
                   >
                     {u}

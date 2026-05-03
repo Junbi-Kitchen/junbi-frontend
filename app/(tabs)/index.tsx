@@ -1,540 +1,193 @@
-// Purpose: Home screen — swipeable priority cards (expiring, meal plan, grocery, savings)
-
-import React, { useCallback, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Dimensions,
-  RefreshControl,
-} from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedScrollHandler,
-  interpolate,
-  Extrapolation,
-} from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { Camera, Link2, Bot, ChevronRight } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { usePantry } from '../../hooks/usePantry';
 import { useGroceryStore } from '../../stores/groceryStore';
-import { useRecipeStore } from '../../stores/recipeStore';
 import { useSavingsStore } from '../../stores/savingsStore';
-import { PriorityCard } from '../../components/home/PriorityCard';
-import { SkeletonLoader } from '../../components/ui/SkeletonLoader';
+import { UrgencyCard } from '../../components/home/UrgencyCard';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
-import { APP } from '../../lib/constants';
 import { COPY } from '../../lib/copy';
 import { getDaysUntilExpiry } from '../../lib/utils';
-import type { PriorityCardData } from '../../components/home/PriorityCard';
 
-const { width: SCREEN_W } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_W - 40; // 20px padding on each side
-const CARD_GAP = 12;
+const GAP = 12;
+const PAD = 16;
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
-  const [loading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const scrollX = useSharedValue(0);
 
   const { items, expiringItems } = usePantry();
   const groceryItems = useGroceryStore((s) => s.items);
-  const recipes = useRecipeStore((s) => s.saved);
   const savings = useSavingsStore();
 
-  // ─── Build priority cards from real store data ────────────
-
-  const buildCards = useCallback((): PriorityCardData[] => {
-    const cards: PriorityCardData[] = [];
-
-    // EXPIRING cards — one per expiring item, sorted by urgency
-    const sortedExpiring = [...expiringItems].sort((a, b) => {
-      const daysA = getDaysUntilExpiry(a.expiryDate ?? '');
-      const daysB = getDaysUntilExpiry(b.expiryDate ?? '');
-      return daysA - daysB;
-    });
-
-    // Show up to 2 expiring cards (most urgent)
-    for (const item of sortedExpiring.slice(0, 2)) {
-      // Find recipes that use this ingredient
-      const suggestions = recipes.filter((r) =>
-        r.ingredients.some((ing) =>
-          ing.name.toLowerCase().includes(item.name.toLowerCase()) ||
-          item.name.toLowerCase().includes(ing.name.toLowerCase())
-        )
-      ).slice(0, 3);
-
-      // Pad with random recipes if we don't have 3 matches
-      const remaining = 3 - suggestions.length;
-      if (remaining > 0) {
-        const extras = recipes
-          .filter((r) => !suggestions.some((s) => s.id === r.id))
-          .slice(0, remaining);
-        suggestions.push(...extras);
-      }
-
-      cards.push({
-        type: 'EXPIRING',
-        item,
-        recipeSuggestions: suggestions,
-      });
-    }
-
-    // MEAL_PLAN card
-    const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    const plannedDays = [true, true, false, true, false, false, true]; // mock
-    cards.push({
-      type: 'MEAL_PLAN',
-      plannedCount: plannedDays.filter(Boolean).length,
-      totalDays: 7,
-      weekDays: dayLabels.map((label, i) => ({
-        label,
-        hasRecipe: plannedDays[i],
-      })),
-    });
-
-    // GROCERY card
-    const unchecked = groceryItems.filter((i) => !i.checked);
-    if (unchecked.length > 0) {
-      cards.push({
-        type: 'GROCERY',
-        itemCount: unchecked.length,
-        estimatedTotal: unchecked.length * 3.49, // mock pricing
-      });
-    }
-
-    // SAVINGS card (always present)
-    cards.push({
-      type: 'SAVINGS',
-      amountSaved: savings.totalSavedThisMonth,
-      mealsCooked: savings.wasteLog.filter((e) => e.action === 'used').length,
-      lastMonthSaved: savings.lastMonthSaved,
-      weeklyTrends: savings.weeklyTrends,
-    });
-
-    return cards;
-  }, [expiringItems, groceryItems, recipes, savings]);
-
-  const cards = buildCards();
+  const criticalItems = expiringItems
+    .filter((i) => getDaysUntilExpiry(i.expiryDate ?? '') <= 2)
+    .slice(0, 2);
+  const uncheckedCount = groceryItems.filter((i) => !i.checked).length;
+  const mealsCooked = savings.wasteLog.filter((e) => e.action === 'used').length;
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // Re-sort triggers via state change; brief visual feedback
     setTimeout(() => setRefreshing(false), 600);
   }, []);
 
-  // ─── Scroll handler for pagination dots ───────────────────
-
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollX.value = event.contentOffset.x;
-    },
-  });
-
-  // ─── CTA handlers ─────────────────────────────────────────
-
-  const handleCta = (card: PriorityCardData) => {
-    switch (card.type) {
-      case 'EXPIRING':
-        if (card.recipeSuggestions[0]) {
-          router.push(`/recipe/${card.recipeSuggestions[0].id}`);
-        }
-        break;
-      case 'MEAL_PLAN':
-        // Future: navigate to meal plan screen
-        break;
-      case 'GROCERY':
-        router.push('/(tabs)/grocery');
-        break;
-      case 'SAVINGS':
-        // Future: share flow
-        break;
-    }
+  const go = (path: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(path as never);
   };
 
-  // ─── Skeleton ─────────────────────────────────────────────
-
-  if (loading) {
-    return (
-      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
-        <View style={{ padding: 20, gap: 16 }}>
-          <SkeletonLoader width="50%" height={32} borderRadius={8} />
-          <SkeletonLoader width="70%" height={18} borderRadius={6} />
-          <SkeletonLoader width={CARD_WIDTH} height={320} borderRadius={16} />
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 8 }}>
-            {[1, 2, 3].map((i) => (
-              <SkeletonLoader key={i} width={8} height={8} borderRadius={4} />
-            ))}
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
-      <Animated.ScrollView
-        style={{ flex: 1 }}
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 8 }}
+        contentContainerStyle={{ paddingHorizontal: PAD, paddingBottom: 24, gap: GAP }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={TOKENS.colors.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {/* Header */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 }}>
-          <Text
-            style={{
-              fontSize: TOKENS.typography.sizes['2xl'],
-              fontWeight: TOKENS.typography.weights.bold,
-              color: TOKENS.colors.primary,
-            }}
-          >
-            {APP.name}
+        <View style={{ paddingTop: 12, paddingBottom: 4 }}>
+          <Text style={{ fontSize: 28, fontWeight: '700', color: colors.primary, fontFamily: TOKENS.typography.fontFamily.bold }}>
+            Junbi
           </Text>
-          <Text
-            style={{
-              fontSize: TOKENS.typography.sizes.sm,
-              color: TOKENS.colors.textSecondary,
-              marginTop: 4,
-            }}
-          >
-            Here's what needs your attention
+          <Text style={{ fontSize: 13, color: colors.cardLabel, marginTop: 2 }}>
+            {criticalItems.length > 0
+              ? `${criticalItems.length} item${criticalItems.length > 1 ? 's' : ''} need attention`
+              : 'Your kitchen at a glance'}
           </Text>
         </View>
 
-        {/* Swipeable card carousel */}
-        <View style={{ marginTop: 8 }}>
-          <Animated.ScrollView
-            horizontal
-            pagingEnabled={false}
-            snapToInterval={CARD_WIDTH + CARD_GAP}
-            decelerationRate={0.88}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              gap: CARD_GAP,
-            }}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-          >
-            {cards.map((card, idx) => (
-              <View key={`${card.type}-${idx}`} style={{ width: CARD_WIDTH }}>
-                <PriorityCard data={card} onCta={() => handleCta(card)} />
-              </View>
+        {/* Critical expiring */}
+        {criticalItems.length > 0 && (
+          <View style={{ flexDirection: 'row', gap: GAP }}>
+            {criticalItems.map((item, i) => (
+              <UrgencyCard key={item.id} item={item} delay={i * 60} flex />
             ))}
-          </Animated.ScrollView>
-
-          {/* Pagination dots */}
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              gap: 8,
-              marginTop: 20,
-            }}
-          >
-            {cards.map((_, idx) => (
-              <PaginationDot
-                key={idx}
-                index={idx}
-                scrollX={scrollX}
-                cardWidth={CARD_WIDTH + CARD_GAP}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* ─── Pantry at a glance ──────────────────── */}
-        <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
-          <SectionLabel text={COPY.home.pantrySection} />
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <StatBox label={COPY.home.stats.items} value={`${items.length}`} />
-            <StatBox
-              label={COPY.home.stats.expiringSoon}
-              value={`${expiringItems.length}`}
-              valueColor={expiringItems.length > 0 ? TOKENS.colors.warning : undefined}
-            />
-            <StatBox label={COPY.home.stats.recipes} value={`${recipes.length}`} />
-          </View>
-        </View>
-
-        {/* ─── Weekly savings ────────────────────────── */}
-        <TouchableOpacity
-          onPress={() => router.push('/savings')}
-          accessibilityLabel="View savings analysis"
-          activeOpacity={0.7}
-          style={{ paddingHorizontal: 20, marginTop: 24 }}
-        >
-          <SectionLabel text={COPY.home.savingsSection} action={COPY.home.seeAnalysis} />
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <StatBox
-              label={COPY.home.stats.saved}
-              value={`$${savings.totalSavedThisMonth.toFixed(0)}`}
-              valueColor={TOKENS.colors.accent}
-            />
-            <StatBox
-              label={COPY.home.stats.wasted}
-              value={`$${savings.totalWastedThisMonth.toFixed(0)}`}
-              valueColor={savings.totalWastedThisMonth > 0 ? TOKENS.colors.error : undefined}
-            />
-            <StatBox
-              label={COPY.home.stats.allTime}
-              value={`$${savings.totalSavedAllTime.toFixed(0)}`}
-              valueColor={TOKENS.colors.primary}
-            />
-          </View>
-        </TouchableOpacity>
-
-        {/* ─── Expiring items list ───────────────────── */}
-        {expiringItems.length > 0 && (
-          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-            <SectionLabel text={COPY.home.expiringSection} />
-            <View
-              style={{
-                backgroundColor: TOKENS.colors.white,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: TOKENS.colors.borderLight,
-                overflow: 'hidden',
-              }}
-            >
-              {expiringItems.slice(0, 4).map((item, idx) => {
-                const days = getDaysUntilExpiry(item.expiryDate ?? '');
-                return (
-                  <View
-                    key={item.id}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      borderBottomWidth: idx < Math.min(expiringItems.length, 4) - 1 ? 1 : 0,
-                      borderBottomColor: TOKENS.colors.borderLight,
-                    }}
-                  >
-                    <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: TOKENS.colors.text }}>
-                      {item.name}
-                    </Text>
-                    <View
-                      style={{
-                        paddingHorizontal: 8,
-                        paddingVertical: 3,
-                        borderRadius: 999,
-                        backgroundColor: days <= 2 ? TOKENS.colors.errorLight : TOKENS.colors.warningLight,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 11,
-                          fontWeight: '600',
-                          color: days <= 2 ? TOKENS.colors.error : TOKENS.colors.warning,
-                        }}
-                      >
-                        {days <= 0 ? 'Today' : `${days}d left`}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
+            {criticalItems.length === 1 && <View style={{ flex: 1 }} />}
           </View>
         )}
 
-        {/* ─── Quick actions ─────────────────────────── */}
-        <View style={{ paddingHorizontal: 20, marginTop: 24, marginBottom: 8 }}>
-          <SectionLabel text={COPY.home.quickActions} />
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <QuickAction
-              label={COPY.home.actions.scanReceipt}
-              icon="📷"
-              onPress={() => router.push('/(tabs)/kitchen')}
-            />
-            <QuickAction
-              label={COPY.home.actions.importRecipe}
-              icon="📲"
-              onPress={() => router.push('/import')}
-            />
-            <QuickAction
-              label={COPY.home.actions.askAgent}
-              icon="🤖"
-              onPress={() => router.push('/(tabs)/chat')}
-            />
+        {/* Savings hero */}
+        <Animated.View entering={FadeInUp.delay(60).duration(400)}>
+          <TouchableOpacity
+            onPress={() => go('/savings')}
+            accessibilityLabel="View savings analysis"
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: TOKENS.borderRadius.card,
+              padding: 18,
+              ...TOKENS.shadows.sm,
+            }}
+          >
+            <CardLabel text={COPY.home.cardLabels.savings} light />
+            <Text style={{ fontSize: 36, fontWeight: '700', color: '#fff', marginTop: 6, fontFamily: TOKENS.typography.fontFamily.bold }}>
+              ${savings.totalSavedThisMonth.toFixed(0)}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+              <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
+                {mealsCooked} meal{mealsCooked !== 1 ? 's' : ''} cooked from pantry
+              </Text>
+              <ChevronRight size={16} color="rgba(255,255,255,0.5)" />
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Pantry + Grocery pair */}
+        <Animated.View entering={FadeInUp.delay(120).duration(400)} style={{ flexDirection: 'row', gap: GAP }}>
+          <StatCard
+            label={COPY.home.cardLabels.pantry}
+            value={`${items.length}`}
+            sub={expiringItems.length > 0 ? `${expiringItems.length} expiring soon` : 'All fresh'}
+            subColor={expiringItems.length > 0 ? colors.freshnessAmber : colors.freshnessGreen}
+            onPress={() => go('/(tabs)/kitchen')}
+          />
+          <StatCard
+            label={COPY.home.cardLabels.grocery}
+            value={`${uncheckedCount}`}
+            sub={uncheckedCount === 0 ? "You're stocked" : 'items to buy'}
+            onPress={() => go('/(tabs)/grocery')}
+          />
+        </Animated.View>
+
+        {/* Quick actions */}
+        <Animated.View entering={FadeInUp.delay(180).duration(400)}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: TOKENS.borderRadius.card, padding: 18, ...TOKENS.shadows.sm }}>
+            <CardLabel text={COPY.home.cardLabels.quickActions} />
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+              <ActionBtn icon={Camera} label={COPY.home.actions.scanReceipt} onPress={() => go('/(tabs)/kitchen')} />
+              <ActionBtn icon={Link2} label={COPY.home.actions.importRecipe} onPress={() => go('/import')} />
+              <ActionBtn icon={Bot} label={COPY.home.actions.askAgent} onPress={() => go('/(tabs)/chat')} />
+            </View>
           </View>
-        </View>
-      </Animated.ScrollView>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ─── Pagination dot with Reanimated ──────────────────────────
+// ── CardLabel ─────────────────────────────────────────────────
 
-function PaginationDot({
-  index,
-  scrollX,
-  cardWidth,
-}: {
-  index: number;
-  scrollX: Animated.SharedValue<number>;
-  cardWidth: number;
-}) {
-  const animatedStyle = useAnimatedStyle(() => {
-    const inputRange = [
-      (index - 1) * cardWidth,
-      index * cardWidth,
-      (index + 1) * cardWidth,
-    ];
-
-    const width = interpolate(
-      scrollX.value,
-      inputRange,
-      [8, 24, 8],
-      Extrapolation.CLAMP
-    );
-
-    const opacity = interpolate(
-      scrollX.value,
-      inputRange,
-      [0.3, 1, 0.3],
-      Extrapolation.CLAMP
-    );
-
-    return { width, opacity };
-  });
-
+function CardLabel({ text, light }: { text: string; light?: boolean }) {
+  const { colors } = useTheme();
   return (
-    <Animated.View
-      style={[
-        {
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: TOKENS.colors.primary,
-        },
-        animatedStyle,
-      ]}
-    />
+    <Text style={{
+      fontSize: 10, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase',
+      color: light ? 'rgba(255,255,255,0.6)' : colors.cardLabel,
+      fontFamily: TOKENS.typography.fontFamily.semibold,
+    }}>
+      {text}
+    </Text>
   );
 }
 
-// ─── Section label ──────────────────────────────────────────
+// ── StatCard ──────────────────────────────────────────────────
 
-function SectionLabel({ text, action }: { text: string; action?: string }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-      <Text
-        style={{
-          fontSize: TOKENS.typography.sizes.xs,
-          fontWeight: TOKENS.typography.weights.semibold,
-          color: TOKENS.colors.textMuted,
-          textTransform: 'uppercase',
-          letterSpacing: 0.8,
-        }}
-      >
-        {text}
-      </Text>
-      {action && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-          <Text
-            style={{
-              fontSize: 12,
-              fontWeight: '500',
-              color: TOKENS.colors.primary,
-            }}
-          >
-            {action}
-          </Text>
-          <ChevronRight size={14} color={TOKENS.colors.primary} />
-        </View>
-      )}
-    </View>
-  );
-}
-
-// ─── Stat box ────────────────────────────────────────────────
-
-function StatBox({
-  label,
-  value,
-  valueColor,
-}: {
-  label: string;
-  value: string;
-  valueColor?: string;
+function StatCard({ label, value, sub, subColor, onPress }: {
+  label: string; value: string; sub: string; subColor?: string; onPress: () => void;
 }) {
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: TOKENS.colors.white,
-        borderRadius: 12,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: TOKENS.colors.borderLight,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 20,
-          fontWeight: '700',
-          color: valueColor ?? TOKENS.colors.text,
-        }}
-      >
-        {value}
-      </Text>
-      <Text
-        style={{
-          fontSize: 11,
-          color: TOKENS.colors.textSecondary,
-          marginTop: 4,
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-// ─── Quick action button ────────────────────────────────────
-
-function QuickAction({
-  label,
-  icon,
-  onPress,
-}: {
-  label: string;
-  icon: string;
-  onPress: () => void;
-}) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
       accessibilityLabel={label}
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        gap: 8,
-        backgroundColor: TOKENS.colors.white,
-        borderRadius: 14,
-        paddingVertical: 16,
-        borderWidth: 1,
-        borderColor: TOKENS.colors.borderLight,
-      }}
+      activeOpacity={0.85}
+      style={{ flex: 1, backgroundColor: colors.surface, borderRadius: TOKENS.borderRadius.card, padding: 18, ...TOKENS.shadows.sm }}
     >
-      <Text style={{ fontSize: 22 }}>{icon}</Text>
-      <Text
-        style={{
-          fontSize: 11,
-          fontWeight: '500',
-          color: TOKENS.colors.textSecondary,
-        }}
-      >
+      <CardLabel text={label} />
+      <Text style={{ fontSize: 30, fontWeight: '700', color: colors.text, marginTop: 8, fontFamily: TOKENS.typography.fontFamily.bold }}>
+        {value}
+      </Text>
+      <Text style={{ fontSize: 12, color: subColor ?? colors.cardLabel, marginTop: 4 }}>
+        {sub}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+// ── ActionBtn ─────────────────────────────────────────────────
+
+function ActionBtn({ icon: Icon, label, onPress }: {
+  icon: React.ComponentType<{ size: number; color: string }>;
+  label: string;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityLabel={label}
+      activeOpacity={0.8}
+      style={{ flex: 1, alignItems: 'center', gap: 8, backgroundColor: colors.background, borderRadius: 12, paddingVertical: 14 }}
+    >
+      <Icon size={22} color={colors.primary} />
+      <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textSecondary, textAlign: 'center' }}>
         {label}
       </Text>
     </TouchableOpacity>

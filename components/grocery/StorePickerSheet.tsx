@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Check, MapPin, ShoppingBag } from 'lucide-react-native';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { MOCK_STORES } from '../../lib/mockData';
 import type { Store } from '../../types';
@@ -20,15 +21,16 @@ export function StorePickerSheet({
   onSelect,
   onConfirm,
 }: StorePickerSheetProps) {
+  const { colors } = useTheme();
   return (
     <View style={{ flex: 1, paddingHorizontal: 20 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
-        <ShoppingBag size={18} color={TOKENS.colors.primary} />
+        <ShoppingBag size={18} color={colors.primary} />
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xl,
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           Choose Store
@@ -37,7 +39,7 @@ export function StorePickerSheet({
       <Text
         style={{
           fontSize: TOKENS.typography.sizes.sm,
-          color: TOKENS.colors.textSecondary,
+          color: colors.textSecondary,
           marginBottom: 16,
           marginTop: 4,
         }}
@@ -59,10 +61,10 @@ export function StorePickerSheet({
               borderRadius: 16,
               marginBottom: 10,
               backgroundColor: isSelected
-                ? TOKENS.colors.primaryMuted
-                : TOKENS.colors.inputBg,
+                ? colors.primaryMuted
+                : colors.inputBg,
               borderWidth: isSelected ? 2 : 0,
-              borderColor: TOKENS.colors.primary,
+              borderColor: colors.primary,
             }}
           >
             {/* Store logo placeholder */}
@@ -71,7 +73,7 @@ export function StorePickerSheet({
                 width: 48,
                 height: 48,
                 borderRadius: 12,
-                backgroundColor: TOKENS.colors.border,
+                backgroundColor: colors.border,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 14,
@@ -81,7 +83,7 @@ export function StorePickerSheet({
                 style={{
                   fontSize: 18,
                   fontWeight: '700',
-                  color: TOKENS.colors.textSecondary,
+                  color: colors.textSecondary,
                 }}
               >
                 {store.name[0]}
@@ -93,7 +95,7 @@ export function StorePickerSheet({
                 style={{
                   fontSize: TOKENS.typography.sizes.md,
                   fontWeight: TOKENS.typography.weights.semibold,
-                  color: TOKENS.colors.text,
+                  color: colors.text,
                   marginBottom: 4,
                 }}
               >
@@ -101,11 +103,11 @@ export function StorePickerSheet({
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                  <MapPin size={12} color={TOKENS.colors.textSecondary} />
+                  <MapPin size={12} color={colors.textSecondary} />
                   <Text
                     style={{
                       fontSize: TOKENS.typography.sizes.xs,
-                      color: TOKENS.colors.textSecondary,
+                      color: colors.textSecondary,
                     }}
                   >
                     {store.distance} mi
@@ -121,7 +123,7 @@ export function StorePickerSheet({
             </View>
 
             {isSelected && (
-              <Check size={20} color={TOKENS.colors.primary} />
+              <Check size={20} color={colors.primary} />
             )}
           </TouchableOpacity>
         );

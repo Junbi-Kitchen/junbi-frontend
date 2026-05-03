@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios"
+    "start": "expo start --port 8000",
+    "android": "expo start --android --port 8000",
+    "ios": "expo start --ios --port 8000"
   },
   "dependencies": {
+    "@expo-google-fonts/dm-sans": "^0.4.2",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@hookform/resolvers": "^3.6.0",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -17,6 +18,7 @@
     "expo-camera": "~17.0.10",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
+    "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",
     "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",
