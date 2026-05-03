@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -25,8 +25,10 @@ import { AddressPickerSheet } from '../../components/grocery/AddressPickerSheet'
 import { EmptyState } from '../../components/ui/EmptyState';
 import { SkeletonLoader } from '../../components/ui/SkeletonLoader';
 import { useGroceryList } from '../../hooks/useGroceryList';
+import { useGroceryStore } from '../../stores/groceryStore';
 import { useOrders } from '../../hooks/useOrders';
 import { useUserStore } from '../../stores/userStore';
+import { usePantry } from '../../hooks/usePantry';
 import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { truncate, pluralize } from '../../lib/utils';
@@ -104,12 +106,8 @@ export default function GroceryScreen() {
         </Animated.View>
 
         {totalItems === 0 ? (
-          <View style={{ paddingTop: 40 }}>
-            <EmptyState
-              icon={ShoppingCart}
-              title="No groceries needed"
-              subtitle="Your pantry's got you covered. When you need something, I'll add it here."
-            />
+          <View style={{ paddingTop: 16 }}>
+            <SmartGroceryPanel />
           </View>
         ) : (
           <>
@@ -308,6 +306,132 @@ export default function GroceryScreen() {
         <AddressPickerSheet onConfirm={() => addressSheetRef.current?.close()} />
       </BottomSheetWrapper>
     </SafeAreaView>
+  );
+}
+
+// ─── Smart grocery AI panel (shown when list is empty) ───────
+
+function SmartGroceryPanel() {
+  const { colors } = useTheme();
+  const { items, expiringItems } = usePantry();
+  const addItem = useGroceryStore((s) => s.addItem);
+  const [phase, setPhase] = useState<'idle' | 'building' | 'ready'>('idle');
+
+  const suggestions = useMemo(() => {
+    const pantryNames = items.map((i) => i.name.toLowerCase());
+    return ['Olive oil', 'Garlic', 'Onions', 'Rice', 'Eggs', 'Butter', 'Milk', 'Salt']
+      .filter((s) => !pantryNames.includes(s.toLowerCase()));
+  }, [items]);
+
+  const handleBuild = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setPhase('building');
+    setTimeout(() => setPhase('ready'), 1800);
+  };
+
+  const handleAddAll = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    for (const name of suggestions) {
+      addItem({ name, quantity: 1, unit: 'item', recipeTitle: undefined }).catch(() => {});
+    }
+  };
+
+  return (
+    <View style={{ marginHorizontal: 20 }}>
+      {/* AI header card */}
+      <View style={{
+        backgroundColor: colors.primaryMuted, borderRadius: 16, padding: 16, marginBottom: 16,
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+          <View style={{
+            width: 32, height: 32, borderRadius: 10,
+            backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Sparkles size={16} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 4 }}>
+              Let me build your grocery list
+            </Text>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 20 }}>
+              I'll check your pantry, spot what's running low, and suggest what to grab.
+            </Text>
+          </View>
+        </View>
+
+        {/* Stats row */}
+        <View style={{ flexDirection: 'row', gap: 0, marginTop: 16, backgroundColor: colors.surface, borderRadius: 12, overflow: 'hidden' }}>
+          {[
+            { val: items.length, label: 'In pantry', color: colors.text },
+            { val: expiringItems.length, label: 'Expiring', color: colors.warning },
+            { val: suggestions.length, label: 'Suggested', color: colors.primary },
+          ].map((stat, i) => (
+            <View key={stat.label} style={{
+              flex: 1, alignItems: 'center', paddingVertical: 12,
+              borderRightWidth: i < 2 ? 1 : 0, borderRightColor: colors.borderLight,
+            }}>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: stat.color }}>{stat.val}</Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>{stat.label}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {phase === 'idle' && (
+        <TouchableOpacity
+          onPress={handleBuild}
+          accessibilityLabel="Build my grocery list"
+          style={{
+            backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 16,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#fff' }}>Build My List</Text>
+        </TouchableOpacity>
+      )}
+
+      {phase === 'building' && (
+        <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+          <Sparkles size={24} color={colors.primary} />
+          <Text style={{ fontSize: 15, color: colors.textSecondary, marginTop: 10 }}>
+            Checking your pantry…
+          </Text>
+        </View>
+      )}
+
+      {phase === 'ready' && suggestions.length > 0 && (
+        <Animated.View entering={FadeInDown.duration(400).springify()}>
+          <View style={{
+            backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1,
+            borderColor: colors.borderLight, marginBottom: 12, overflow: 'hidden',
+          }}>
+            {suggestions.map((name, i) => (
+              <View key={name} style={{
+                flexDirection: 'row', alignItems: 'center', gap: 10,
+                paddingHorizontal: 14, paddingVertical: 12,
+                borderBottomWidth: i < suggestions.length - 1 ? 1 : 0,
+                borderBottomColor: colors.borderLight,
+              }}>
+                <View style={{ width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: colors.border }} />
+                <Text style={{ flex: 1, fontSize: 15, color: colors.text }}>{name}</Text>
+                <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.primaryMuted }}>
+                  <Text style={{ fontSize: 10, fontWeight: '600', color: colors.primary }}>AI</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity
+            onPress={handleAddAll}
+            accessibilityLabel="Add all suggested items to list"
+            style={{ backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 16, alignItems: 'center' }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#fff' }}>
+              Add All to My List
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+    </View>
   );
 }
 

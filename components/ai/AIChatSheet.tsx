@@ -219,7 +219,7 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
       onChange={handleSheetChange}
       backdropComponent={renderBackdrop}
       enablePanDownToClose
-      backgroundStyle={{ backgroundColor: colors.white }}
+      backgroundStyle={{ backgroundColor: colors.surface }}
       handleIndicatorStyle={{ backgroundColor: colors.border, width: 40 }}
     >
       <BottomSheetView style={{ flex: 1 }}>

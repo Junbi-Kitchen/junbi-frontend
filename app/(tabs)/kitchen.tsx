@@ -16,10 +16,7 @@ import {
   ChevronRight,
   Clock,
   Heart,
-  User,
-  Camera,
   Import,
-  PenLine,
   ChefHat,
   Trash2,
   UtensilsCrossed,
@@ -36,7 +33,6 @@ import { Badge } from '../../components/ui/Badge';
 import { FreshnessBar } from '../../components/pantry/FreshnessBar';
 import { PantrySection } from '../../components/pantry/PantrySection';
 import { ManualAddSheet } from '../../components/pantry/ManualAddSheet';
-import { ReceiptScanModal } from '../../components/pantry/ReceiptScanModal';
 import { SavedToast } from '../../components/shared/SavedToast';
 import { usePantry } from '../../hooks/usePantry';
 import { useRecipeStore } from '../../stores/recipeStore';
@@ -67,14 +63,12 @@ export default function KitchenScreen() {
   const [activeTab, setActiveTab] = useState<TabView>('pantry');
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<PantryItem | null>(null);
-  const [scanVisible, setScanVisible] = useState(false);
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [toastAmount, setToastAmount] = useState(0);
   const [toastVisible, setToastVisible] = useState(false);
   const [newName, setNewName] = useState('');
   const [newEmoji, setNewEmoji] = useState('');
 
-  const addSheetRef = useRef<BottomSheet>(null);
   const itemSheetRef = useRef<BottomSheet>(null);
   const manualAddRef = useRef<BottomSheet>(null);
   const newCollectionRef = useRef<BottomSheet>(null);
@@ -165,9 +159,6 @@ export default function KitchenScreen() {
         <Animated.View
           entering={FadeInUp.duration(400)}
           style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
             paddingHorizontal: 20,
             paddingTop: 16,
             paddingBottom: 12,
@@ -180,17 +171,6 @@ export default function KitchenScreen() {
           }}>
             Kitchen
           </Text>
-          <TouchableOpacity
-            onPress={() => router.push('/profile')}
-            accessibilityLabel="Open profile"
-            style={{
-              width: 36, height: 36, borderRadius: 999,
-              backgroundColor: colors.primaryMuted,
-              alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <User size={18} color={colors.primary} />
-          </TouchableOpacity>
         </Animated.View>
 
         {/* Segmented control */}
@@ -500,51 +480,7 @@ export default function KitchenScreen() {
         )}
       </ScrollView>
 
-      {/* ─── FAB ─────────────────────────────────────────── */}
-      <TouchableOpacity
-        onPress={async () => {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          if (activeTab === 'pantry') {
-            addSheetRef.current?.expand();
-          } else {
-            router.push('/import');
-          }
-        }}
-        accessibilityLabel={activeTab === 'pantry' ? 'Add pantry item' : 'Import recipe'}
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 20,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          backgroundColor: colors.primary,
-          alignItems: 'center',
-          justifyContent: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 8,
-          elevation: 6,
-        }}
-      >
-        <Plus size={24} color="#fff" />
-      </TouchableOpacity>
-
       {/* ─── Bottom Sheets ───────────────────────────────── */}
-
-      <BottomSheetWrapper sheetRef={addSheetRef} snapPoints={['25%']} initialIndex={-1}>
-        <View style={{ padding: 20, gap: 4 }}>
-          <Text style={{
-            fontSize: TOKENS.typography.sizes.lg, fontWeight: TOKENS.typography.weights.bold,
-            color: colors.text, marginBottom: 12,
-          }}>
-            Add to Pantry
-          </Text>
-          <AddOptionRow icon={Camera} label="Scan receipt" onPress={() => { addSheetRef.current?.close(); setScanVisible(true); }} />
-          <AddOptionRow icon={PenLine} label="Add item manually" onPress={() => { addSheetRef.current?.close(); setTimeout(() => manualAddRef.current?.expand(), 300); }} />
-        </View>
-      </BottomSheetWrapper>
 
       <BottomSheetWrapper sheetRef={itemSheetRef} snapPoints={['40%']} initialIndex={-1} onClose={() => setSelectedItem(null)}>
         {selectedItem && (
@@ -653,7 +589,6 @@ export default function KitchenScreen() {
         </View>
       </BottomSheetWrapper>
 
-      <ReceiptScanModal visible={scanVisible} onClose={() => setScanVisible(false)} />
       <SavedToast amount={toastAmount} visible={toastVisible} onDismiss={() => setToastVisible(false)} />
     </SafeAreaView>
   );
@@ -668,31 +603,6 @@ function getItemEmoji(category: IngredientCategory): string {
     spices: '🌶️', bakery: '🍞',
   };
   return map[category] ?? '🍽️';
-}
-
-// ─── Add option row ──────────────────────────────────────────
-
-function AddOptionRow({ icon: Icon, label, onPress }: {
-  icon: React.ComponentType<{ size: number; color: string }>; label: string; onPress: () => void;
-}) {
-  const { colors } = useTheme();
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      accessibilityLabel={label}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 4, borderRadius: 12 }}
-    >
-      <View style={{
-        width: 36, height: 36, borderRadius: 10,
-        backgroundColor: colors.inputBg, alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Icon size={18} color={colors.text} />
-      </View>
-      <Text style={{ fontSize: TOKENS.typography.sizes.md, fontWeight: TOKENS.typography.weights.medium, color: colors.text }}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
 }
 
 // ─── Recipe list row ─────────────────────────────────────────

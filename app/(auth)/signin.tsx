@@ -72,11 +72,12 @@ export default function SignInScreen() {
         console.log('[SignIn] hasSeenOnboarding set');
         if (pendingPreferences) {
           // First install: quiz done before signup — flush prefs, auth guard navigates to tabs
-          updatePreferences(pendingPreferences).catch(() => {});
-          if (pendingPreferences.name) {
-            updateProfile({ name: pendingPreferences.name }).catch(() => {});
-          }
+          const { name: pendingName } = pendingPreferences;
           setPendingPreferences(null);
+          await Promise.all([
+            updatePreferences(pendingPreferences).catch(() => {}),
+            pendingName ? updateProfile({ name: pendingName }).catch(() => {}) : Promise.resolve(),
+          ]);
         } else {
           // Same-device new account: quiz after signup
           router.replace('/(auth)/quiz');

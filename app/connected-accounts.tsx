@@ -169,7 +169,7 @@ export default function ConnectedAccountsScreen() {
                       false: colors.border,
                       true: colors.primaryLight,
                     }}
-                    thumbColor={connected ? colors.primary : colors.white}
+                    thumbColor={connected ? colors.primary : colors.surface}
                   />
                 </View>
               </View>

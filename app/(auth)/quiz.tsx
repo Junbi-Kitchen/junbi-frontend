@@ -20,7 +20,7 @@ const ALL_TAGS: DietaryTag[] = [
 export default function QuizScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { user, updatePreferences, setPendingPreferences } = useUserStore();
+  const { user, updatePreferences, updateProfile, setPendingPreferences } = useUserStore();
 
   const [name, setName] = useState('');
   const [selectedTag, setSelectedTag] = useState<DietaryTag | null>(null);
@@ -37,6 +37,7 @@ export default function QuizScreen() {
     try {
       if (user) {
         await updatePreferences({ dietaryTags });
+        if (name.trim()) await updateProfile({ name: name.trim() });
         router.replace('/(tabs)');
       } else {
         setPendingPreferences({ dietaryTags, householdSize: 2, name: name.trim() || undefined });
