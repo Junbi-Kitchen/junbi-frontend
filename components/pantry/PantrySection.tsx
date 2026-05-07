@@ -7,6 +7,7 @@ import {
   Coffee, Droplets, Sparkles, Croissant, ChevronDown, ChevronUp,
 } from 'lucide-react-native';
 import { PantryItemRow } from './PantryItemRow';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import type { IngredientCategory, PantryItem } from '../../types';
 
@@ -39,6 +40,7 @@ export function PantrySection({
   onUpdateQuantity,
   onDelete,
 }: PantrySectionProps) {
+  const { colors } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
   const meta = CATEGORY_META[category];
   const Icon = meta.icon;
@@ -54,7 +56,7 @@ export function PantrySection({
           alignItems: 'center',
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: TOKENS.colors.background,
+          backgroundColor: colors.background,
         }}
       >
         <View
@@ -62,27 +64,27 @@ export function PantrySection({
             width: 32,
             height: 32,
             borderRadius: 8,
-            backgroundColor: TOKENS.colors.primaryMuted,
+            backgroundColor: colors.primaryMuted,
             alignItems: 'center',
             justifyContent: 'center',
             marginRight: 10,
           }}
         >
-          <Icon size={16} color={TOKENS.colors.primary} />
+          <Icon size={16} color={colors.primary} />
         </View>
         <Text
           style={{
             flex: 1,
             fontSize: TOKENS.typography.sizes.md,
             fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           {meta.label}
         </Text>
         <View
           style={{
-            backgroundColor: TOKENS.colors.primaryMuted,
+            backgroundColor: colors.primaryMuted,
             borderRadius: 999,
             paddingHorizontal: 8,
             paddingVertical: 2,
@@ -93,16 +95,16 @@ export function PantrySection({
             style={{
               fontSize: TOKENS.typography.sizes.xs,
               fontWeight: TOKENS.typography.weights.semibold,
-              color: TOKENS.colors.primary,
+              color: colors.primary,
             }}
           >
             {items.length}
           </Text>
         </View>
         {collapsed ? (
-          <ChevronDown size={18} color={TOKENS.colors.textSecondary} />
+          <ChevronDown size={18} color={colors.textSecondary} />
         ) : (
-          <ChevronUp size={18} color={TOKENS.colors.textSecondary} />
+          <ChevronUp size={18} color={colors.textSecondary} />
         )}
       </TouchableOpacity>
 

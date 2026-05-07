@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { ShoppingBag } from 'lucide-react-native';
 import { GroceryItemRow } from './GroceryItemRow';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import type { GroceryItem } from '../../types';
 
@@ -20,6 +21,7 @@ export function GroceryListSection({
   onToggle,
   onDelete,
 }: GroceryListSectionProps) {
+  const { colors } = useTheme();
   const checkedCount = items.filter((i) => i.checked).length;
 
   return (
@@ -31,17 +33,17 @@ export function GroceryListSection({
           alignItems: 'center',
           paddingHorizontal: 16,
           paddingVertical: 10,
-          backgroundColor: TOKENS.colors.background,
+          backgroundColor: colors.background,
           gap: 8,
         }}
       >
-        <ShoppingBag size={14} color={TOKENS.colors.textSecondary} />
+        <ShoppingBag size={14} color={colors.textSecondary} />
         <Text
           style={{
             flex: 1,
             fontSize: TOKENS.typography.sizes.sm,
             fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
             textTransform: 'uppercase',
             letterSpacing: 0.5,
           }}
@@ -51,7 +53,7 @@ export function GroceryListSection({
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xs,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
           }}
         >
           {checkedCount}/{items.length}

@@ -25,7 +25,8 @@
     "plugins": [
       "expo-router",
       "expo-camera",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-font"
     ],
     "scheme": "junbi",
     "experiments": {

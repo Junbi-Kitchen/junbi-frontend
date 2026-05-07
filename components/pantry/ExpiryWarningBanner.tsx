@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { AlertTriangle } from 'lucide-react-native';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { pluralize } from '../../lib/utils';
 
@@ -17,6 +18,7 @@ interface ExpiryWarningBannerProps {
 }
 
 export function ExpiryWarningBanner({ count, onPress }: ExpiryWarningBannerProps) {
+  const { colors } = useTheme();
   const height = useSharedValue(0);
   const opacity = useSharedValue(0);
 
@@ -46,19 +48,19 @@ export function ExpiryWarningBanner({ count, onPress }: ExpiryWarningBannerProps
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: TOKENS.colors.warningLight,
+          backgroundColor: colors.warningLight,
           paddingHorizontal: 16,
           paddingVertical: 12,
           gap: 10,
         }}
       >
-        <AlertTriangle size={18} color={TOKENS.colors.warning} />
+        <AlertTriangle size={18} color={colors.warning} />
         <Text
           style={{
             flex: 1,
             fontSize: TOKENS.typography.sizes.sm,
             fontWeight: TOKENS.typography.weights.medium,
-            color: TOKENS.colors.warning,
+            color: colors.warning,
           }}
         >
           {pluralize(count, 'item')} expiring soon — use them first

@@ -13,6 +13,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Button } from '../ui/Button';
 import { SavingsCounter } from './SavingsCounter';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { getDaysUntilExpiry, getPantryStatusColor } from '../../lib/utils';
 import type { PantryItem, Recipe } from '../../types';
@@ -76,10 +77,11 @@ function CardShell({
   ctaLabel: string;
   onCta: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
-        backgroundColor: TOKENS.colors.background,
+        backgroundColor: colors.surface,
         borderRadius: 16,
         padding: 24,
         height: CARD_HEIGHT,
@@ -101,14 +103,15 @@ function CardShell({
 // ─── EXPIRING card ───────────────────────────────────────────
 
 function ExpiringCard({ data, onCta }: { data: ExpiringCardData; onCta: () => void }) {
+  const { colors } = useTheme();
   const days = getDaysUntilExpiry(data.item.expiryDate ?? '');
   const status = getPantryStatusColor(data.item.expiryDate ?? '');
   const freshColor =
     status === 'expired'
-      ? TOKENS.colors.error
+      ? colors.error
       : status === 'warning'
-        ? TOKENS.colors.warning
-        : TOKENS.colors.primary;
+        ? colors.warning
+        : colors.primary;
 
   const timeLabel =
     days <= 0 ? 'expired today' : days === 1 ? 'expires tomorrow' : `expires in ${days} days`;
@@ -148,7 +151,7 @@ function ExpiringCard({ data, onCta }: { data: ExpiringCardData; onCta: () => vo
         style={{
           fontSize: TOKENS.typography.sizes.xl,
           fontWeight: TOKENS.typography.weights.bold,
-          color: TOKENS.colors.text,
+          color: colors.text,
           lineHeight: 28,
           marginBottom: 4,
         }}
@@ -159,7 +162,7 @@ function ExpiringCard({ data, onCta }: { data: ExpiringCardData; onCta: () => vo
       <Text
         style={{
           fontSize: TOKENS.typography.sizes.sm,
-          color: TOKENS.colors.textSecondary,
+          color: colors.textSecondary,
           marginBottom: 16,
         }}
       >
@@ -177,7 +180,7 @@ function ExpiringCard({ data, onCta }: { data: ExpiringCardData; onCta: () => vo
                   width: '100%',
                   height: 80,
                   borderRadius: 12,
-                  backgroundColor: TOKENS.colors.border,
+                  backgroundColor: colors.border,
                 }}
                 resizeMode="cover"
               />
@@ -186,7 +189,7 @@ function ExpiringCard({ data, onCta }: { data: ExpiringCardData; onCta: () => vo
                 style={{
                   fontSize: 11,
                   fontWeight: '500',
-                  color: TOKENS.colors.text,
+                  color: colors.text,
                   marginTop: 6,
                 }}
               >
@@ -203,6 +206,7 @@ function ExpiringCard({ data, onCta }: { data: ExpiringCardData; onCta: () => vo
 // ─── MEAL_PLAN card ──────────────────────────────────────────
 
 function MealPlanCard({ data, onCta }: { data: MealPlanCardData; onCta: () => void }) {
+  const { colors } = useTheme();
   return (
     <CardShell ctaLabel="Review plan" onCta={onCta}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
@@ -211,12 +215,12 @@ function MealPlanCard({ data, onCta }: { data: MealPlanCardData; onCta: () => vo
             width: 40,
             height: 40,
             borderRadius: 12,
-            backgroundColor: TOKENS.colors.primaryMuted,
+            backgroundColor: colors.primaryMuted,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <CalendarDays size={20} color={TOKENS.colors.primary} />
+          <CalendarDays size={20} color={colors.primary} />
         </View>
       </View>
 
@@ -224,7 +228,7 @@ function MealPlanCard({ data, onCta }: { data: MealPlanCardData; onCta: () => vo
         style={{
           fontSize: TOKENS.typography.sizes.xl,
           fontWeight: TOKENS.typography.weights.bold,
-          color: TOKENS.colors.text,
+          color: colors.text,
           lineHeight: 28,
           marginBottom: 4,
         }}
@@ -235,7 +239,7 @@ function MealPlanCard({ data, onCta }: { data: MealPlanCardData; onCta: () => vo
       <Text
         style={{
           fontSize: TOKENS.typography.sizes.sm,
-          color: TOKENS.colors.textSecondary,
+          color: colors.textSecondary,
           marginBottom: 20,
         }}
       >
@@ -252,23 +256,23 @@ function MealPlanCard({ data, onCta }: { data: MealPlanCardData; onCta: () => vo
                 height: 36,
                 borderRadius: 10,
                 backgroundColor: day.hasRecipe
-                  ? TOKENS.colors.primaryMuted
-                  : TOKENS.colors.inputBg,
+                  ? colors.primaryMuted
+                  : colors.inputBg,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               {day.hasRecipe ? (
-                <ChefHat size={16} color={TOKENS.colors.primary} />
+                <ChefHat size={16} color={colors.primary} />
               ) : (
-                <Text style={{ fontSize: 14, color: TOKENS.colors.textMuted }}>—</Text>
+                <Text style={{ fontSize: 14, color: colors.textMuted }}>—</Text>
               )}
             </View>
             <Text
               style={{
                 fontSize: 10,
                 fontWeight: '500',
-                color: TOKENS.colors.textSecondary,
+                color: colors.textSecondary,
               }}
             >
               {day.label}
@@ -283,6 +287,7 @@ function MealPlanCard({ data, onCta }: { data: MealPlanCardData; onCta: () => vo
 // ─── GROCERY card ────────────────────────────────────────────
 
 function GroceryCard({ data, onCta }: { data: GroceryCardData; onCta: () => void }) {
+  const { colors } = useTheme();
   return (
     <CardShell ctaLabel="Order now" onCta={onCta}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
@@ -291,12 +296,12 @@ function GroceryCard({ data, onCta }: { data: GroceryCardData; onCta: () => void
             width: 40,
             height: 40,
             borderRadius: 12,
-            backgroundColor: TOKENS.colors.accentLight,
+            backgroundColor: colors.accentLight,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <ShoppingCart size={20} color={TOKENS.colors.accent} />
+          <ShoppingCart size={20} color={colors.accent} />
         </View>
       </View>
 
@@ -304,7 +309,7 @@ function GroceryCard({ data, onCta }: { data: GroceryCardData; onCta: () => void
         style={{
           fontSize: TOKENS.typography.sizes.xl,
           fontWeight: TOKENS.typography.weights.bold,
-          color: TOKENS.colors.text,
+          color: colors.text,
           lineHeight: 28,
           marginBottom: 4,
         }}
@@ -315,7 +320,7 @@ function GroceryCard({ data, onCta }: { data: GroceryCardData; onCta: () => void
       <Text
         style={{
           fontSize: TOKENS.typography.sizes.sm,
-          color: TOKENS.colors.textSecondary,
+          color: colors.textSecondary,
           marginBottom: 8,
         }}
       >
@@ -335,7 +340,7 @@ function GroceryCard({ data, onCta }: { data: GroceryCardData; onCta: () => void
           style={{
             fontSize: 32,
             fontWeight: '700',
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           ${data.estimatedTotal.toFixed(2)}
@@ -343,7 +348,7 @@ function GroceryCard({ data, onCta }: { data: GroceryCardData; onCta: () => void
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.sm,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
           }}
         >
           estimated total
@@ -356,6 +361,7 @@ function GroceryCard({ data, onCta }: { data: GroceryCardData; onCta: () => void
 // ─── SAVINGS card ────────────────────────────────────────────
 
 function SavingsCard({ data, onCta }: { data: SavingsCardData; onCta: () => void }) {
+  const { colors } = useTheme();
   return (
     <CardShell ctaLabel="Share my savings" onCta={onCta}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
@@ -364,12 +370,12 @@ function SavingsCard({ data, onCta }: { data: SavingsCardData; onCta: () => void
             width: 40,
             height: 40,
             borderRadius: 12,
-            backgroundColor: `${TOKENS.colors.accent}20`,
+            backgroundColor: `${colors.accent}20`,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <TrendingUp size={20} color={TOKENS.colors.accent} />
+          <TrendingUp size={20} color={colors.accent} />
         </View>
       </View>
 
@@ -377,7 +383,7 @@ function SavingsCard({ data, onCta }: { data: SavingsCardData; onCta: () => void
         style={{
           fontSize: TOKENS.typography.sizes.xl,
           fontWeight: TOKENS.typography.weights.bold,
-          color: TOKENS.colors.text,
+          color: colors.text,
           lineHeight: 28,
           marginBottom: 4,
         }}
@@ -403,6 +409,7 @@ function SavingsCard({ data, onCta }: { data: SavingsCardData; onCta: () => void
 }
 
 function MiniTrendChart({ trends }: { trends: { week: string; saved: number; wasted: number }[] }) {
+  const { colors } = useTheme();
   const chartW = 260;
   const chartH = 60;
   const maxVal = Math.max(...trends.map((t) => t.saved), 1);
@@ -418,7 +425,7 @@ function MiniTrendChart({ trends }: { trends: { week: string; saved: number; was
         <Polyline
           points={points}
           fill="none"
-          stroke={TOKENS.colors.accent}
+          stroke={colors.accent}
           strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -429,7 +436,7 @@ function MiniTrendChart({ trends }: { trends: { week: string; saved: number; was
             cx={i * stepX}
             cy={chartH - (t.saved / maxVal) * chartH}
             r={3.5}
-            fill={TOKENS.colors.accent}
+            fill={colors.accent}
           />
         ))}
       </Svg>
@@ -439,7 +446,7 @@ function MiniTrendChart({ trends }: { trends: { week: string; saved: number; was
             key={i}
             style={{
               fontSize: 9,
-              color: TOKENS.colors.textMuted,
+              color: colors.textMuted,
             }}
           >
             {t.week}

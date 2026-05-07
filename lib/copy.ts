@@ -46,6 +46,13 @@ export const COPY = {
       importRecipe: 'Import recipe',
       askAgent: 'Ask agent',
     },
+    cardLabels: {
+      savings: 'Saved this month',
+      pantry: 'Pantry',
+      grocery: 'Grocery list',
+      expiring: 'Use today',
+      quickActions: 'Quick actions',
+    },
   },
 
   // ─── Kitchen ────────────────────────────────────────────────
@@ -67,21 +74,13 @@ export const COPY = {
     screenTitle: 'AI Agents',
     screenSubtitle: 'Pick an agent to handle your task. Each one walks you through step by step.',
     list: {
-      recipe: {
-        label: 'Recipe Finder',
-        description: 'Find recipes from what you have',
-      },
       mealplan: {
-        label: 'Meal Planner',
-        description: 'Plan your week automatically',
+        label: 'Planning Agent',
+        description: 'Plan your meals and week automatically',
       },
       grocery: {
-        label: 'Smart Grocery',
-        description: 'Build a list from pantry gaps',
-      },
-      savings: {
-        label: 'Savings Coach',
-        description: 'Track waste and save money',
+        label: 'Grocery Agent',
+        description: 'Build a smart list from your pantry gaps',
       },
     },
     recipeFinder: {

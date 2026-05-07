@@ -28,6 +28,7 @@ import { ManualAddSheet } from './ManualAddSheet';
 import { ReceiptScanModal } from './ReceiptScanModal';
 import { ExpiryWarningBanner } from './ExpiryWarningBanner';
 import { EmptyState } from '../ui/EmptyState';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { pluralize, getPantryStatusColor } from '../../lib/utils';
 import type { LucideIcon } from 'lucide-react-native';
@@ -95,6 +96,7 @@ export function PantryGrid({
   onScanOpen,
   onScanClose,
 }: PantryGridProps) {
+  const { colors } = useTheme();
   const handleQuickAdd = async (qa: typeof QUICK_ADD[0]) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const existing = items.find((i) => i.name.toLowerCase() === qa.name.toLowerCase());
@@ -117,8 +119,8 @@ export function PantryGrid({
   const getChipBorderColor = (item: PantryItem): string => {
     if (!item.expiryDate) return 'transparent';
     const status = getPantryStatusColor(item.expiryDate);
-    if (status === 'expired') return TOKENS.colors.error;
-    if (status === 'warning') return TOKENS.colors.warning;
+    if (status === 'expired') return colors.error;
+    if (status === 'warning') return colors.warning;
     return 'transparent';
   };
 
@@ -148,7 +150,7 @@ export function PantryGrid({
               style={{
                 fontSize: TOKENS.typography.sizes['2xl'],
                 fontWeight: TOKENS.typography.weights.bold,
-                color: TOKENS.colors.text,
+                color: colors.text,
               }}
             >
               My Pantry
@@ -156,7 +158,7 @@ export function PantryGrid({
             <Text
               style={{
                 fontSize: TOKENS.typography.sizes.sm,
-                color: TOKENS.colors.textSecondary,
+                color: colors.textSecondary,
                 marginTop: 2,
               }}
             >
@@ -171,12 +173,12 @@ export function PantryGrid({
                 width: 40,
                 height: 40,
                 borderRadius: 12,
-                backgroundColor: TOKENS.colors.primaryMuted,
+                backgroundColor: colors.primaryMuted,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Camera size={18} color={TOKENS.colors.primary} />
+              <Camera size={18} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => manualSheetRef.current?.expand()}
@@ -185,12 +187,12 @@ export function PantryGrid({
                 width: 40,
                 height: 40,
                 borderRadius: 12,
-                backgroundColor: TOKENS.colors.primary,
+                backgroundColor: colors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Plus size={18} color={TOKENS.colors.white} />
+              <Plus size={18} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -201,11 +203,11 @@ export function PantryGrid({
             placeholder="Search your pantry..."
             value={search}
             onChangeText={onSearchChange}
-            leftIcon={<Search size={16} color={TOKENS.colors.textMuted} />}
+            leftIcon={<Search size={16} color={colors.textMuted} />}
             rightIcon={
               search ? (
                 <TouchableOpacity onPress={() => onSearchChange('')} accessibilityLabel="Clear search">
-                  <X size={16} color={TOKENS.colors.textMuted} />
+                  <X size={16} color={colors.textMuted} />
                 </TouchableOpacity>
               ) : undefined
             }
@@ -228,15 +230,15 @@ export function PantryGrid({
               gap: 8,
               paddingVertical: 12,
               borderRadius: 12,
-              backgroundColor: TOKENS.colors.primaryMuted,
+              backgroundColor: colors.primaryMuted,
             }}
           >
-            <Zap size={16} color={TOKENS.colors.primary} />
+            <Zap size={16} color={colors.primary} />
             <Text
               style={{
                 fontSize: TOKENS.typography.sizes.md,
                 fontWeight: TOKENS.typography.weights.semibold,
-                color: TOKENS.colors.primary,
+                color: colors.primary,
               }}
             >
               Quick Add
@@ -271,12 +273,12 @@ export function PantryGrid({
                     style={{
                       fontSize: TOKENS.typography.sizes.md,
                       fontWeight: TOKENS.typography.weights.semibold,
-                      color: TOKENS.colors.text,
+                      color: colors.text,
                     }}
                   >
                     {meta.label}
                   </Text>
-                  <Text style={{ fontSize: TOKENS.typography.sizes.xs, color: TOKENS.colors.textMuted }}>
+                  <Text style={{ fontSize: TOKENS.typography.sizes.xs, color: colors.textMuted }}>
                     ({catItems.length})
                   </Text>
                 </View>
@@ -296,9 +298,9 @@ export function PantryGrid({
                           paddingHorizontal: 12,
                           paddingVertical: 8,
                           borderRadius: 999,
-                          backgroundColor: TOKENS.colors.white,
+                          backgroundColor: colors.surface,
                           borderWidth: isExpiring ? 1.5 : 1,
-                          borderColor: isExpiring ? borderColor : TOKENS.colors.border,
+                          borderColor: isExpiring ? borderColor : colors.border,
                           gap: 6,
                         }}
                       >
@@ -306,12 +308,12 @@ export function PantryGrid({
                           style={{
                             fontSize: TOKENS.typography.sizes.sm,
                             fontWeight: TOKENS.typography.weights.medium,
-                            color: TOKENS.colors.text,
+                            color: colors.text,
                           }}
                         >
                           {item.name}
                         </Text>
-                        <Text style={{ fontSize: TOKENS.typography.sizes.xs, color: TOKENS.colors.textSecondary }}>
+                        <Text style={{ fontSize: TOKENS.typography.sizes.xs, color: colors.textSecondary }}>
                           {item.quantity}{item.unit !== 'whole' ? item.unit : 'x'}
                         </Text>
                       </TouchableOpacity>
@@ -328,7 +330,7 @@ export function PantryGrid({
             <Text
               style={{
                 textAlign: 'center',
-                color: TOKENS.colors.textSecondary,
+                color: colors.textSecondary,
                 marginTop: 32,
                 paddingHorizontal: 20,
                 fontSize: TOKENS.typography.sizes.md,
@@ -355,7 +357,7 @@ export function PantryGrid({
             style={{
               fontSize: TOKENS.typography.sizes.xl,
               fontWeight: TOKENS.typography.weights.bold,
-              color: TOKENS.colors.text,
+              color: colors.text,
               marginBottom: 6,
             }}
           >
@@ -364,7 +366,7 @@ export function PantryGrid({
           <Text
             style={{
               fontSize: TOKENS.typography.sizes.sm,
-              color: TOKENS.colors.textSecondary,
+              color: colors.textSecondary,
               marginBottom: 20,
             }}
           >
@@ -385,22 +387,22 @@ export function PantryGrid({
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     borderRadius: 12,
-                    backgroundColor: inPantry ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+                    backgroundColor: inPantry ? colors.primaryMuted : colors.inputBg,
                     borderWidth: inPantry ? 1.5 : 0,
-                    borderColor: TOKENS.colors.primaryLight,
+                    borderColor: colors.primaryLight,
                   }}
                 >
                   {inPantry ? (
-                    <Check size={14} color={TOKENS.colors.primary} />
+                    <Check size={14} color={colors.primary} />
                   ) : (
-                    <Plus size={14} color={TOKENS.colors.textSecondary} />
+                    <Plus size={14} color={colors.textSecondary} />
                   )}
                   <View>
                     <Text
                       style={{
                         fontSize: TOKENS.typography.sizes.md,
                         fontWeight: TOKENS.typography.weights.medium,
-                        color: inPantry ? TOKENS.colors.primary : TOKENS.colors.text,
+                        color: inPantry ? colors.primary : colors.text,
                       }}
                     >
                       {qa.name}
@@ -408,7 +410,7 @@ export function PantryGrid({
                     <Text
                       style={{
                         fontSize: TOKENS.typography.sizes.xs,
-                        color: inPantry ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
+                        color: inPantry ? colors.primary : colors.textSecondary,
                         marginTop: 1,
                       }}
                     >

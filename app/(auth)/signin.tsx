@@ -17,6 +17,7 @@ import { Input } from '../../components/ui/Input';
 import { useUserStore } from '../../stores/userStore';
 import { auth } from '../../lib/firebase';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 
 const schema = z.object({
@@ -40,7 +41,8 @@ function mapFirebaseError(code: string): string {
 
 export default function SignInScreen() {
   const router = useRouter();
-  const { updatePreferences, pendingPreferences, setPendingPreferences, setHasSeenOnboarding } = useUserStore();
+  const { colors } = useTheme();
+  const { updatePreferences, updateProfile, pendingPreferences, setPendingPreferences, setHasSeenOnboarding } = useUserStore();
 
   const [mode, setMode] = useState<'signin' | 'signup'>(pendingPreferences ? 'signup' : 'signin');
   const [showPassword, setShowPassword] = useState(false);
@@ -70,8 +72,12 @@ export default function SignInScreen() {
         console.log('[SignIn] hasSeenOnboarding set');
         if (pendingPreferences) {
           // First install: quiz done before signup — flush prefs, auth guard navigates to tabs
-          updatePreferences(pendingPreferences).catch(() => {});
+          const { name: pendingName } = pendingPreferences;
           setPendingPreferences(null);
+          await Promise.all([
+            updatePreferences(pendingPreferences).catch(() => {}),
+            pendingName ? updateProfile({ name: pendingName }).catch(() => {}) : Promise.resolve(),
+          ]);
         } else {
           // Same-device new account: quiz after signup
           router.replace('/(auth)/quiz');
@@ -85,7 +91,7 @@ export default function SignInScreen() {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Back button */}
       {router.canGoBack() && (
         <TouchableOpacity
@@ -93,7 +99,7 @@ export default function SignInScreen() {
           accessibilityLabel="Go back"
           style={{ padding: 16 }}
         >
-          <ChevronLeft size={24} color={TOKENS.colors.text} />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
       )}
 
@@ -102,7 +108,7 @@ export default function SignInScreen() {
           style={{
             fontSize: TOKENS.typography.sizes['2xl'],
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
             marginBottom: 8,
           }}
         >
@@ -111,7 +117,7 @@ export default function SignInScreen() {
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.md,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
             marginBottom: 32,
           }}
         >
@@ -154,8 +160,8 @@ export default function SignInScreen() {
                     accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword
-                      ? <EyeOff size={20} color={TOKENS.colors.textSecondary} />
-                      : <Eye size={20} color={TOKENS.colors.textSecondary} />
+                      ? <EyeOff size={20} color={colors.textSecondary} />
+                      : <Eye size={20} color={colors.textSecondary} />
                     }
                   </TouchableOpacity>
                 }
@@ -168,7 +174,7 @@ export default function SignInScreen() {
           <Text
             style={{
               fontSize: TOKENS.typography.sizes.sm,
-              color: TOKENS.colors.error,
+              color: colors.error,
               marginBottom: 16,
             }}
           >
@@ -190,7 +196,7 @@ export default function SignInScreen() {
           accessibilityLabel={mode === 'signin' ? 'Switch to sign up' : 'Switch to sign in'}
           style={{ alignItems: 'center', paddingVertical: 16 }}
         >
-          <Text style={{ fontSize: TOKENS.typography.sizes.md, color: TOKENS.colors.primary }}>
+          <Text style={{ fontSize: TOKENS.typography.sizes.md, color: colors.primary }}>
             {mode === 'signin'
               ? "Don't have an account? Sign up"
               : 'Already have an account? Sign in'}

@@ -2,14 +2,16 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import type { Nutrition } from '../../types';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
+import type { Nutrition } from '../../types';
 
 interface NutritionBarProps {
   nutrition: Nutrition;
 }
 
 export function NutritionBar({ nutrition }: NutritionBarProps) {
+  const { colors } = useTheme();
   const { calories, proteinG, carbsG, fatG } = nutrition;
   const total = proteinG + carbsG + fatG;
 
@@ -23,7 +25,7 @@ export function NutritionBar({ nutrition }: NutritionBarProps) {
         style={{
           fontSize: TOKENS.typography.sizes['2xl'],
           fontWeight: TOKENS.typography.weights.bold,
-          color: TOKENS.colors.text,
+          color: colors.text,
           marginBottom: 8,
         }}
       >
@@ -32,7 +34,7 @@ export function NutritionBar({ nutrition }: NutritionBarProps) {
           style={{
             fontSize: TOKENS.typography.sizes.md,
             fontWeight: TOKENS.typography.weights.regular,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
           }}
         >
           calories
@@ -49,32 +51,16 @@ export function NutritionBar({ nutrition }: NutritionBarProps) {
           marginBottom: 12,
         }}
       >
-        <View
-          style={{
-            flex: proteinPct,
-            backgroundColor: TOKENS.colors.primary,
-          }}
-        />
-        <View
-          style={{
-            flex: carbsPct,
-            backgroundColor: TOKENS.colors.accent,
-            marginHorizontal: 2,
-          }}
-        />
-        <View
-          style={{
-            flex: fatPct,
-            backgroundColor: '#9CA3AF',
-          }}
-        />
+        <View style={{ flex: proteinPct, backgroundColor: colors.primary }} />
+        <View style={{ flex: carbsPct, backgroundColor: colors.accent, marginHorizontal: 2 }} />
+        <View style={{ flex: fatPct, backgroundColor: colors.textMuted }} />
       </View>
 
       {/* Labels */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <MacroLabel label="Protein" grams={proteinG} color={TOKENS.colors.primary} />
-        <MacroLabel label="Carbs" grams={carbsG} color={TOKENS.colors.accent} />
-        <MacroLabel label="Fat" grams={fatG} color="#9CA3AF" />
+        <MacroLabel label="Protein" grams={proteinG} color={colors.primary} />
+        <MacroLabel label="Carbs" grams={carbsG} color={colors.accent} />
+        <MacroLabel label="Fat" grams={fatG} color={colors.textMuted} />
       </View>
     </View>
   );
@@ -89,6 +75,7 @@ function MacroLabel({
   grams: number;
   color: string;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={{ alignItems: 'center' }}>
       <Text
@@ -103,7 +90,7 @@ function MacroLabel({
       <Text
         style={{
           fontSize: TOKENS.typography.sizes.xs,
-          color: TOKENS.colors.textSecondary,
+          color: colors.textSecondary,
           marginTop: 2,
         }}
       >

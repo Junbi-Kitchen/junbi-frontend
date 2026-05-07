@@ -9,6 +9,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { TrendingUp, TrendingDown } from 'lucide-react-native';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
@@ -24,6 +25,7 @@ export function SavingsCounter({
   lastMonthAmount,
   size = 'lg',
 }: SavingsCounterProps) {
+  const { colors } = useTheme();
   const animatedValue = useSharedValue(0);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export function SavingsCounter({
         style={{
           fontSize,
           fontWeight: '700',
-          color: TOKENS.colors.accent,
+          color: colors.accent,
           fontVariant: ['tabular-nums'],
         }}
       >
@@ -62,7 +64,7 @@ export function SavingsCounter({
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.sm,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
           }}
         >
           saved this month
@@ -70,15 +72,15 @@ export function SavingsCounter({
         {lastMonthAmount !== undefined && diff > 0 && (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
             {isUp ? (
-              <TrendingUp size={14} color={TOKENS.colors.success} />
+              <TrendingUp size={14} color={colors.success} />
             ) : (
-              <TrendingDown size={14} color={TOKENS.colors.error} />
+              <TrendingDown size={14} color={colors.error} />
             )}
             <Text
               style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: isUp ? TOKENS.colors.success : TOKENS.colors.error,
+                color: isUp ? colors.success : colors.error,
               }}
             >
               ${diff.toFixed(0)}

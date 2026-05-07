@@ -13,6 +13,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { Card } from '../components/ui/Card';
 import { useUserPreferences } from '../hooks/useUserPreferences';
 import { useUserStore } from '../stores/userStore';
+import { useTheme } from '../hooks/useTheme';
 import { TOKENS } from '../lib/tokens';
 
 const PLATFORMS = [
@@ -38,11 +39,12 @@ const PLATFORMS = [
 
 export default function ConnectedAccountsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { connectAccount, disconnectAccount, isConnected } = useUserPreferences();
   const { user } = useUserStore();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View
         style={{
@@ -60,18 +62,18 @@ export default function ConnectedAccountsScreen() {
             width: 36,
             height: 36,
             borderRadius: 12,
-            backgroundColor: TOKENS.colors.inputBg,
+            backgroundColor: colors.inputBg,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <ChevronLeft size={20} color={TOKENS.colors.text} />
+          <ChevronLeft size={20} color={colors.text} />
         </TouchableOpacity>
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xl,
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           Connected Accounts
@@ -82,7 +84,7 @@ export default function ConnectedAccountsScreen() {
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.sm,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
             marginBottom: 16,
             lineHeight: 20,
           }}
@@ -99,7 +101,7 @@ export default function ConnectedAccountsScreen() {
                 style={{
                   paddingVertical: 14,
                   borderBottomWidth: idx < PLATFORMS.length - 1 ? 1 : 0,
-                  borderBottomColor: TOKENS.colors.borderLight,
+                  borderBottomColor: colors.borderLight,
                 }}
               >
                 <View
@@ -124,7 +126,7 @@ export default function ConnectedAccountsScreen() {
                         style={{
                           fontSize: TOKENS.typography.sizes.md,
                           fontWeight: TOKENS.typography.weights.semibold,
-                          color: TOKENS.colors.text,
+                          color: colors.text,
                         }}
                       >
                         {platform.label}
@@ -133,7 +135,7 @@ export default function ConnectedAccountsScreen() {
                     <Text
                       style={{
                         fontSize: TOKENS.typography.sizes.sm,
-                        color: TOKENS.colors.textSecondary,
+                        color: colors.textSecondary,
                         marginTop: 4,
                         marginLeft: 18,
                       }}
@@ -144,7 +146,7 @@ export default function ConnectedAccountsScreen() {
                       <Text
                         style={{
                           fontSize: TOKENS.typography.sizes.xs,
-                          color: TOKENS.colors.primary,
+                          color: colors.primary,
                           marginTop: 4,
                           marginLeft: 18,
                         }}
@@ -164,10 +166,10 @@ export default function ConnectedAccountsScreen() {
                       }
                     }}
                     trackColor={{
-                      false: TOKENS.colors.border,
-                      true: TOKENS.colors.primaryLight,
+                      false: colors.border,
+                      true: colors.primaryLight,
                     }}
-                    thumbColor={connected ? TOKENS.colors.primary : TOKENS.colors.white}
+                    thumbColor={connected ? colors.primary : colors.surface}
                   />
                 </View>
               </View>

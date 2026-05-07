@@ -6,14 +6,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { UtensilsCrossed } from 'lucide-react-native';
 import { Button } from '../../components/ui/Button';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { APP } from '../../lib/constants';
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ flex: 1, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center' }}>
         {/* Icon */}
         <View
@@ -21,13 +23,13 @@ export default function OnboardingScreen() {
             width: 96,
             height: 96,
             borderRadius: 24,
-            backgroundColor: TOKENS.colors.primaryMuted,
+            backgroundColor: colors.primaryMuted,
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 32,
           }}
         >
-          <UtensilsCrossed size={48} color={TOKENS.colors.primary} />
+          <UtensilsCrossed size={48} color={colors.primary} />
         </View>
 
         {/* Headline */}
@@ -35,7 +37,7 @@ export default function OnboardingScreen() {
           style={{
             fontSize: TOKENS.typography.sizes['3xl'],
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
             textAlign: 'center',
             marginBottom: 12,
           }}
@@ -45,7 +47,7 @@ export default function OnboardingScreen() {
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.lg,
-            color: TOKENS.colors.textSecondary,
+            color: colors.textSecondary,
             textAlign: 'center',
             lineHeight: 28,
             marginBottom: 48,

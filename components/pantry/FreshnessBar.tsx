@@ -1,5 +1,3 @@
-// Purpose: Thin horizontal bar showing freshness status based on expiry days
-
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -12,19 +10,12 @@ import Animated, {
 import { getDaysUntilExpiry } from '../../lib/utils';
 import { TOKENS } from '../../lib/tokens';
 
-const COLORS = {
-  fresh: TOKENS.colors.success,
-  warning: TOKENS.colors.warning,
-  urgent: TOKENS.colors.error,
-  staple: TOKENS.colors.textSecondary,
-};
-
 function getBarColor(expiryDate?: string): string {
-  if (!expiryDate) return COLORS.staple;
+  if (!expiryDate) return TOKENS.colors.cardLabel;
   const days = getDaysUntilExpiry(expiryDate);
-  if (days <= 2) return COLORS.urgent;
-  if (days <= 6) return COLORS.warning;
-  return COLORS.fresh;
+  if (days <= 2) return TOKENS.colors.freshnessRed;
+  if (days <= 6) return TOKENS.colors.freshnessAmber;
+  return TOKENS.colors.freshnessGreen;
 }
 
 interface FreshnessBarProps {
@@ -34,42 +25,44 @@ interface FreshnessBarProps {
 export function FreshnessBar({ expiryDate }: FreshnessBarProps) {
   const color = getBarColor(expiryDate);
   const isUrgent = expiryDate ? getDaysUntilExpiry(expiryDate) <= 2 : false;
-  const pulseOpacity = useSharedValue(1);
+
+  const width = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    width.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) });
+  }, [width]);
 
   useEffect(() => {
     if (isUrgent) {
-      pulseOpacity.value = withRepeat(
-        withTiming(0.7, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+      opacity.value = withRepeat(
+        withTiming(0.45, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
         -1,
         true
       );
     } else {
-      pulseOpacity.value = 1;
+      opacity.value = 1;
     }
-  }, [isUrgent, pulseOpacity]);
+  }, [isUrgent, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: pulseOpacity.value,
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${width.value * 100}%`,
+    opacity: opacity.value,
   }));
 
   return (
     <View
       style={{
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: `${color}30`,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: `${color}25`,
         overflow: 'hidden',
       }}
     >
       <Animated.View
         style={[
-          {
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: color,
-            width: '100%',
-          },
-          animatedStyle,
+          { height: 6, borderRadius: 3, backgroundColor: color },
+          barStyle,
         ]}
       />
     </View>

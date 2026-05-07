@@ -3,8 +3,11 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import { useUserStore } from '../../stores/userStore';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { COPY } from '../../lib/copy';
 import type { DietaryTag } from '../../types';
@@ -16,28 +19,28 @@ const ALL_TAGS: DietaryTag[] = [
 
 export default function QuizScreen() {
   const router = useRouter();
-  const { user, updatePreferences, setPendingPreferences } = useUserStore();
+  const { colors } = useTheme();
+  const { user, updatePreferences, updateProfile, setPendingPreferences } = useUserStore();
 
-  const [selectedTags, setSelectedTags] = useState<DietaryTag[]>([]);
+  const [name, setName] = useState('');
+  const [selectedTag, setSelectedTag] = useState<DietaryTag | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const noneActive = selectedTags.length === 0;
-
-  const toggleTag = (tag: DietaryTag) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+  const selectTag = async (tag: DietaryTag) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedTag((prev) => (prev === tag ? null : tag));
   };
 
   const handleFinish = async () => {
     setSaving(true);
+    const dietaryTags: DietaryTag[] = selectedTag ? [selectedTag] : [];
     try {
       if (user) {
-        // Already authenticated (same-device new account) — save prefs, go to tabs
-        await updatePreferences({ dietaryTags: selectedTags });
+        await updatePreferences({ dietaryTags });
+        if (name.trim()) await updateProfile({ name: name.trim() });
         router.replace('/(tabs)');
       } else {
-        setPendingPreferences({ dietaryTags: selectedTags, householdSize: 2 });
+        setPendingPreferences({ dietaryTags, householdSize: 2, name: name.trim() || undefined });
         router.push('/(auth)/signin');
       }
     } finally {
@@ -46,66 +49,79 @@ export default function QuizScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <TouchableOpacity
         onPress={() => router.back()}
         accessibilityLabel="Go back"
         style={{ padding: 16 }}
       >
-        <ChevronLeft size={24} color={TOKENS.colors.text} />
+        <ChevronLeft size={24} color={colors.text} />
       </TouchableOpacity>
 
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 8 }}>
-        <Text style={{ fontSize: TOKENS.typography.sizes['2xl'], fontWeight: TOKENS.typography.weights.bold, color: TOKENS.colors.text, marginBottom: 8 }}>
+        <Text style={{ fontSize: TOKENS.typography.sizes['2xl'], fontWeight: TOKENS.typography.weights.bold, color: colors.text, marginBottom: 8 }}>
           {COPY.quiz.title}
         </Text>
-        <Text style={{ fontSize: TOKENS.typography.sizes.md, color: TOKENS.colors.textSecondary, marginBottom: 24 }}>
+        <Text style={{ fontSize: TOKENS.typography.sizes.md, color: colors.textSecondary, marginBottom: 28 }}>
           {COPY.quiz.subtitle}
         </Text>
 
+        {/* Name */}
+        <Text style={{ fontSize: TOKENS.typography.sizes.sm, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+          Your name
+        </Text>
+        <View style={{ marginBottom: 28 }}>
+          <Input
+            placeholder="e.g. Alex"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+        </View>
+
+        {/* Dietary preference — single select */}
+        <Text style={{ fontSize: TOKENS.typography.sizes.sm, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+          Dietary preference
+        </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 }}>
-          {/* None pill — visually selected when nothing else is chosen */}
           <TouchableOpacity
-            onPress={() => setSelectedTags([])}
+            onPress={async () => { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelectedTag(null); }}
             accessibilityLabel="No dietary restrictions"
             style={{
               paddingHorizontal: 14,
               paddingVertical: 8,
               borderRadius: 999,
-              backgroundColor: noneActive ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
-              borderWidth: noneActive ? 2 : 0,
-              borderColor: TOKENS.colors.primary,
+              backgroundColor: selectedTag === null ? colors.primary : colors.inputBg,
             }}
           >
             <Text style={{
               fontSize: 14,
-              fontWeight: '500',
-              color: noneActive ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
+              fontWeight: '600',
+              color: selectedTag === null ? '#fff' : colors.textSecondary,
             }}>
               {COPY.quiz.noneTag}
             </Text>
           </TouchableOpacity>
 
           {ALL_TAGS.map((tag) => {
-            const selected = selectedTags.includes(tag);
+            const selected = selectedTag === tag;
             return (
               <TouchableOpacity
                 key={tag}
-                onPress={() => toggleTag(tag)}
+                onPress={() => selectTag(tag)}
                 accessibilityLabel={`${selected ? 'Deselect' : 'Select'} ${tag}`}
                 style={{
                   paddingHorizontal: 14,
                   paddingVertical: 8,
                   borderRadius: 999,
-                  backgroundColor: selected ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
-                  borderWidth: selected ? 2 : 0,
-                  borderColor: TOKENS.colors.primary,
+                  backgroundColor: selected ? colors.primary : colors.inputBg,
                 }}
               >
                 <Text style={{
                   fontSize: 14,
-                  fontWeight: '500',
-                  color: selected ? TOKENS.colors.primary : TOKENS.colors.textSecondary,
+                  fontWeight: '600',
+                  color: selected ? '#fff' : colors.textSecondary,
                   textTransform: 'capitalize',
                 }}>
                   {tag}

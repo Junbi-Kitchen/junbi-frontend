@@ -6,6 +6,7 @@ import { SwipeableRow } from '../ui/SwipeableRow';
 import { StepperInput } from '../ui/StepperInput';
 import { Badge } from '../ui/Badge';
 import { getPantryStatusColor, getDaysUntilExpiry } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import type { PantryItem } from '../../types';
 
@@ -20,6 +21,7 @@ export function PantryItemRow({
   onUpdateQuantity,
   onDelete,
 }: PantryItemRowProps) {
+  const { colors } = useTheme();
   const status = getPantryStatusColor(item.expiryDate);
 
   return (
@@ -30,9 +32,9 @@ export function PantryItemRow({
           alignItems: 'center',
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: TOKENS.colors.white,
+          backgroundColor: colors.surface,
           borderBottomWidth: 1,
-          borderBottomColor: TOKENS.colors.borderLight,
+          borderBottomColor: colors.borderLight,
         }}
       >
         <View style={{ flex: 1, marginRight: 12 }}>
@@ -40,7 +42,7 @@ export function PantryItemRow({
             style={{
               fontSize: TOKENS.typography.sizes.md,
               fontWeight: TOKENS.typography.weights.medium,
-              color: TOKENS.colors.text,
+              color: colors.text,
               marginBottom: 4,
             }}
           >

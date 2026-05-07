@@ -5,6 +5,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Clock } from 'lucide-react-native';
 import { Badge } from '../ui/Badge';
 import { formatCookTime, truncate } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import type { Recipe } from '../../types';
 
@@ -14,6 +15,7 @@ interface RecipeCardMiniProps {
 }
 
 export function RecipeCardMini({ recipe, onPress }: RecipeCardMiniProps) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -21,7 +23,7 @@ export function RecipeCardMini({ recipe, onPress }: RecipeCardMiniProps) {
       style={{
         width: 160,
         borderRadius: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         overflow: 'hidden',
         ...TOKENS.shadows.sm,
       }}
@@ -36,7 +38,7 @@ export function RecipeCardMini({ recipe, onPress }: RecipeCardMiniProps) {
           style={{
             fontSize: TOKENS.typography.sizes.sm,
             fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.text,
+            color: colors.text,
             marginBottom: 6,
           }}
           numberOfLines={2}
@@ -52,11 +54,11 @@ export function RecipeCardMini({ recipe, onPress }: RecipeCardMiniProps) {
           />
         )}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 4 }}>
-          <Clock size={12} color={TOKENS.colors.textSecondary} />
+          <Clock size={12} color={colors.textSecondary} />
           <Text
             style={{
               fontSize: TOKENS.typography.sizes.xs,
-              color: TOKENS.colors.textSecondary,
+              color: colors.textSecondary,
             }}
           >
             {formatCookTime(recipe.cookTimeMinutes)}

@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import { getTagColor, getTagTextColor } from '../../lib/utils';
 import type { DietaryTag } from '../../types';
 
 const ALL_TAGS: DietaryTag[] = [
@@ -28,6 +28,7 @@ export function RecipeFilterDrawer({
   onApply,
   onClose,
 }: RecipeFilterDrawerProps) {
+  const { colors } = useTheme();
   const [tags, setTags] = useState<DietaryTag[]>(selectedFilters);
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [cookTime, setCookTime] = useState<string>('Any');
@@ -45,7 +46,7 @@ export function RecipeFilterDrawer({
       contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={{ fontSize: TOKENS.typography.sizes.xl, fontWeight: TOKENS.typography.weights.bold, color: TOKENS.colors.text, marginBottom: 20 }}>
+      <Text style={{ fontSize: TOKENS.typography.sizes.xl, fontWeight: TOKENS.typography.weights.bold, color: colors.text, marginBottom: 20 }}>
         Filter Recipes
       </Text>
 
@@ -60,7 +61,7 @@ export function RecipeFilterDrawer({
             style={{
               borderRadius: 999,
               borderWidth: tags.includes(tag) ? 2 : 0,
-              borderColor: TOKENS.colors.primary,
+              borderColor: colors.primary,
             }}
           >
             <Badge label={tag} variant="dietary" tag={tag} size="sm" />
@@ -80,10 +81,10 @@ export function RecipeFilterDrawer({
               paddingHorizontal: 14,
               paddingVertical: 6,
               borderRadius: 999,
-              backgroundColor: cuisine === c ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+              backgroundColor: cuisine === c ? colors.primaryMuted : colors.inputBg,
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '500', color: cuisine === c ? TOKENS.colors.primary : TOKENS.colors.textSecondary }}>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: cuisine === c ? colors.primary : colors.textSecondary }}>
               {c}
             </Text>
           </TouchableOpacity>
@@ -102,10 +103,10 @@ export function RecipeFilterDrawer({
               paddingHorizontal: 14,
               paddingVertical: 6,
               borderRadius: 999,
-              backgroundColor: cookTime === t ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+              backgroundColor: cookTime === t ? colors.primaryMuted : colors.inputBg,
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '500', color: cookTime === t ? TOKENS.colors.primary : TOKENS.colors.textSecondary }}>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: cookTime === t ? colors.primary : colors.textSecondary }}>
               {t}
             </Text>
           </TouchableOpacity>
@@ -125,10 +126,10 @@ export function RecipeFilterDrawer({
               paddingVertical: 10,
               borderRadius: 12,
               alignItems: 'center',
-              backgroundColor: difficulty === d ? TOKENS.colors.primaryMuted : TOKENS.colors.inputBg,
+              backgroundColor: difficulty === d ? colors.primaryMuted : colors.inputBg,
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '500', color: difficulty === d ? TOKENS.colors.primary : TOKENS.colors.textSecondary, textTransform: 'capitalize' }}>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: difficulty === d ? colors.primary : colors.textSecondary, textTransform: 'capitalize' }}>
               {d}
             </Text>
           </TouchableOpacity>
@@ -164,8 +165,9 @@ export function RecipeFilterDrawer({
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
+  const { colors } = useTheme();
   return (
-    <Text style={{ fontSize: TOKENS.typography.sizes.sm, fontWeight: TOKENS.typography.weights.semibold, color: TOKENS.colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+    <Text style={{ fontSize: TOKENS.typography.sizes.sm, fontWeight: TOKENS.typography.weights.semibold, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
       {children}
     </Text>
   );

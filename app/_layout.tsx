@@ -3,6 +3,7 @@
 import '../global.css';
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { useFonts, DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ import { useRecipeStore } from '../stores/recipeStore';
 import { useGroceryStore } from '../stores/groceryStore';
 import { useSavingsStore } from '../stores/savingsStore';
 import { useOrderStore } from '../stores/orderStore';
+import { useTheme } from '../hooks/useTheme';
 import { TOKENS } from '../lib/tokens';
 import { storage, STORAGE_KEYS } from '../lib/storage';
 
@@ -29,6 +31,7 @@ const queryClient = new QueryClient({
 });
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { colors } = useTheme();
   const segments = useSegments();
   const router = useRouter();
   const { user, setUser, fetchProfile, hasSeenOnboarding, setHasSeenOnboarding } = useUserStore();
@@ -87,8 +90,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (authLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: TOKENS.colors.background }}>
-        <ActivityIndicator size="large" color={TOKENS.colors.primary} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -97,6 +100,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const { colors } = useTheme();
+  const [fontsLoaded] = useFonts({ DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F2F2F7' }}>
+        <ActivityIndicator size="large" color="#2D6A4F" />
+      </View>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -105,7 +119,7 @@ export default function RootLayout() {
             <Stack
                 screenOptions={{
                   headerShown: false,
-                  contentStyle: { backgroundColor: TOKENS.colors.background },
+                  contentStyle: { backgroundColor: colors.background },
                   animation: 'slide_from_right',
                 }}
               >
@@ -119,7 +133,7 @@ export default function RootLayout() {
                 <Stack.Screen name="profile" />
                 <Stack.Screen name="savings" />
               </Stack>
-              <StatusBar style="dark" />
+              <StatusBar style="auto" />
           </AuthGuard>
         </QueryClientProvider>
       </SafeAreaProvider>

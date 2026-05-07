@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Share as ShareIcon } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { APP } from '../../lib/constants';
 import { COPY } from '../../lib/copy';
@@ -15,6 +16,7 @@ interface ShareCardProps {
 }
 
 export function ShareCard({ onShare }: ShareCardProps) {
+  const { colors } = useTheme();
   const userName = useUserStore((s) => s.user?.name ?? 'Someone');
   const { totalSavedThisMonth, wasteLog } = useSavingsStore();
   const mealsCooked = wasteLog.filter((e) => e.action === 'used').length;
@@ -38,7 +40,7 @@ export function ShareCard({ onShare }: ShareCardProps) {
       style={{
         borderRadius: 20,
         overflow: 'hidden',
-        backgroundColor: TOKENS.colors.primary,
+        backgroundColor: colors.primary,
       }}
     >
       {/* Card content */}
@@ -73,7 +75,7 @@ export function ShareCard({ onShare }: ShareCardProps) {
           style={{
             fontSize: 48,
             fontWeight: '800',
-            color: TOKENS.colors.accent,
+            color: colors.accent,
             lineHeight: 52,
           }}
         >
@@ -103,7 +105,7 @@ export function ShareCard({ onShare }: ShareCardProps) {
           }}
         >
           <View>
-            <Text style={{ fontSize: 24, fontWeight: '700', color: TOKENS.colors.white }}>
+            <Text style={{ fontSize: 24, fontWeight: '700', color: '#fff' }}>
               {mealsCooked}
             </Text>
             <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
@@ -111,7 +113,7 @@ export function ShareCard({ onShare }: ShareCardProps) {
             </Text>
           </View>
           <View>
-            <Text style={{ fontSize: 24, fontWeight: '700', color: TOKENS.colors.white }}>
+            <Text style={{ fontSize: 24, fontWeight: '700', color: '#fff' }}>
               {wasteLog.filter((e) => e.action === 'used').reduce((sum, e) => sum + 1, 0)}
             </Text>
             <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
@@ -134,12 +136,12 @@ export function ShareCard({ onShare }: ShareCardProps) {
           backgroundColor: 'rgba(0,0,0,0.15)',
         }}
       >
-        <ShareIcon size={18} color={TOKENS.colors.white} />
+        <ShareIcon size={18} color={'#fff'} />
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.md,
             fontWeight: TOKENS.typography.weights.semibold,
-            color: TOKENS.colors.white,
+            color: '#fff',
           }}
         >
           Share my savings

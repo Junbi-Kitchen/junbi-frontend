@@ -9,7 +9,8 @@ import Animated, {
   withDelay,
   runOnJS,
 } from 'react-native-reanimated';
-import { cn } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
+import { TOKENS } from '../../lib/tokens';
 
 interface ToastNotificationProps {
   message: string;
@@ -18,22 +19,16 @@ interface ToastNotificationProps {
   onHide: () => void;
 }
 
-const TYPE_STYLES = {
-  success: {
-    border: 'border-l-[#2D6A4F]',
-    text: 'text-[#2D6A4F]',
-    bg: 'bg-white',
-  },
-  error: {
-    border: 'border-l-[#E63946]',
-    text: 'text-[#E63946]',
-    bg: 'bg-white',
-  },
-  info: {
-    border: 'border-l-[#3B82F6]',
-    text: 'text-[#3B82F6]',
-    bg: 'bg-white',
-  },
+const TYPE_TEXT_COLOR = {
+  success: '#2D6A4F',
+  error: '#E63946',
+  info: '#3B82F6',
+};
+
+const TYPE_BORDER_COLOR = {
+  success: '#2D6A4F',
+  error: '#E63946',
+  info: '#3B82F6',
 };
 
 export function ToastNotification({
@@ -42,6 +37,7 @@ export function ToastNotification({
   visible,
   onHide,
 }: ToastNotificationProps) {
+  const { colors } = useTheme();
   const translateY = useSharedValue(100);
   const opacity = useSharedValue(0);
 
@@ -50,7 +46,6 @@ export function ToastNotification({
       translateY.value = withTiming(0, { duration: 300 });
       opacity.value = withTiming(1, { duration: 300 });
 
-      // Auto-dismiss after 3s
       translateY.value = withDelay(3000, withTiming(100, { duration: 300 }));
       opacity.value = withDelay(
         3000,
@@ -68,19 +63,26 @@ export function ToastNotification({
 
   if (!visible) return null;
 
-  const styles = TYPE_STYLES[type];
-
   return (
     <Animated.View
-      style={animatedStyle}
-      className={cn(
-        'absolute bottom-24 left-4 right-4 rounded-xl shadow-md',
-        'border-l-4 px-4 py-3',
-        styles.bg,
-        styles.border
-      )}
+      style={[
+        {
+          position: 'absolute',
+          bottom: 96,
+          left: 16,
+          right: 16,
+          borderRadius: 12,
+          borderLeftWidth: 4,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          backgroundColor: colors.surface,
+          borderLeftColor: TYPE_BORDER_COLOR[type],
+          ...TOKENS.shadows.md,
+        },
+        animatedStyle,
+      ]}
     >
-      <Text className={cn('text-base font-medium', styles.text)}>
+      <Text style={{ fontSize: TOKENS.typography.sizes.md, fontWeight: '500', color: TYPE_TEXT_COLOR[type] }}>
         {message}
       </Text>
     </Animated.View>

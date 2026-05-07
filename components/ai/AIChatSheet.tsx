@@ -27,6 +27,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Camera, Mic, ChefHat } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../../hooks/useTheme';
 import { TOKENS } from '../../lib/tokens';
 import { useRecipeStore } from '../../stores/recipeStore';
 import { useSavingsStore } from '../../stores/savingsStore';
@@ -62,6 +63,7 @@ interface AIChatSheetProps {
 }
 
 export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
+  const { colors } = useTheme();
   const router = useRouter();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -217,8 +219,8 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
       onChange={handleSheetChange}
       backdropComponent={renderBackdrop}
       enablePanDownToClose
-      backgroundStyle={{ backgroundColor: TOKENS.colors.white }}
-      handleIndicatorStyle={{ backgroundColor: TOKENS.colors.border, width: 40 }}
+      backgroundStyle={{ backgroundColor: colors.surface }}
+      handleIndicatorStyle={{ backgroundColor: colors.border, width: 40 }}
     >
       <BottomSheetView style={{ flex: 1 }}>
         <KeyboardAvoidingView
@@ -235,7 +237,7 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
               paddingHorizontal: 20,
               paddingBottom: 12,
               borderBottomWidth: 1,
-              borderBottomColor: TOKENS.colors.borderLight,
+              borderBottomColor: colors.borderLight,
             }}
           >
             <View
@@ -243,24 +245,24 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
                 width: 32,
                 height: 32,
                 borderRadius: 10,
-                backgroundColor: TOKENS.colors.primaryMuted,
+                backgroundColor: colors.primaryMuted,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <ChefHat size={16} color={TOKENS.colors.primary} />
+              <ChefHat size={16} color={colors.primary} />
             </View>
             <View>
               <Text
                 style={{
                   fontSize: TOKENS.typography.sizes.md,
                   fontWeight: TOKENS.typography.weights.semibold,
-                  color: TOKENS.colors.text,
+                  color: colors.text,
                 }}
               >
                 Kitchen AI
               </Text>
-              <Text style={{ fontSize: 11, color: TOKENS.colors.textMuted }}>
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>
                 Always here to help
               </Text>
             </View>
@@ -302,16 +304,16 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
                   paddingHorizontal: 14,
                   paddingVertical: 8,
                   borderRadius: 999,
-                  backgroundColor: TOKENS.colors.inputBg,
+                  backgroundColor: colors.inputBg,
                   borderWidth: 1,
-                  borderColor: TOKENS.colors.border,
+                  borderColor: colors.border,
                 }}
               >
                 <Text
                   style={{
                     fontSize: 13,
                     fontWeight: '500',
-                    color: TOKENS.colors.text,
+                    color: colors.text,
                   }}
                 >
                   {reply}
@@ -330,18 +332,18 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
               paddingVertical: 12,
               paddingBottom: Platform.OS === 'ios' ? 28 : 12,
               borderTopWidth: 1,
-              borderTopColor: TOKENS.colors.borderLight,
-              backgroundColor: TOKENS.colors.white,
+              borderTopColor: colors.borderLight,
+              backgroundColor: colors.surface,
             }}
           >
             <TouchableOpacity accessibilityLabel="Open camera" style={{ padding: 4 }}>
-              <Camera size={20} color={TOKENS.colors.textMuted} />
+              <Camera size={20} color={colors.textMuted} />
             </TouchableOpacity>
 
             <View
               style={{
                 flex: 1,
-                backgroundColor: TOKENS.colors.inputBg,
+                backgroundColor: colors.inputBg,
                 borderRadius: 20,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
@@ -351,12 +353,12 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
                 value={input}
                 onChangeText={setInput}
                 placeholder="Ask me anything..."
-                placeholderTextColor={TOKENS.colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 returnKeyType="send"
                 onSubmitEditing={() => handleSend()}
                 style={{
                   fontSize: 15,
-                  color: TOKENS.colors.text,
+                  color: colors.text,
                   maxHeight: 80,
                 }}
                 multiline
@@ -364,7 +366,7 @@ export function AIChatSheet({ sheetRef, onSheetChange }: AIChatSheetProps) {
             </View>
 
             <TouchableOpacity accessibilityLabel="Voice input" style={{ padding: 4 }}>
-              <Mic size={20} color={TOKENS.colors.textMuted} />
+              <Mic size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -382,6 +384,7 @@ function MessageBubble({
   message: ChatMessage;
   onRecipeTap: (id: string) => void;
 }) {
+  const { colors } = useTheme();
   const isUser = message.role === 'user';
 
   return (
@@ -398,14 +401,14 @@ function MessageBubble({
           borderRadius: 18,
           borderBottomRightRadius: isUser ? 4 : 18,
           borderBottomLeftRadius: isUser ? 18 : 4,
-          backgroundColor: isUser ? TOKENS.colors.primary : TOKENS.colors.inputBg,
+          backgroundColor: isUser ? colors.primary : colors.inputBg,
         }}
       >
         <Text
           style={{
             fontSize: 15,
             lineHeight: 21,
-            color: isUser ? TOKENS.colors.white : TOKENS.colors.text,
+            color: isUser ? '#fff' : colors.text,
           }}
         >
           {message.text}
@@ -421,11 +424,11 @@ function MessageBubble({
               accessibilityLabel={`Open ${(message.richContent as { title: string }).title}`}
               style={{
                 flexDirection: 'row',
-                backgroundColor: TOKENS.colors.white,
+                backgroundColor: colors.surface,
                 borderRadius: 14,
                 overflow: 'hidden',
                 borderWidth: 1,
-                borderColor: TOKENS.colors.borderLight,
+                borderColor: colors.borderLight,
               }}
             >
               <Image
@@ -438,12 +441,12 @@ function MessageBubble({
                   style={{
                     fontSize: 14,
                     fontWeight: '600',
-                    color: TOKENS.colors.text,
+                    color: colors.text,
                   }}
                 >
                   {(message.richContent as { title: string }).title}
                 </Text>
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary, marginTop: 2 }}>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                   {(message.richContent as { cookTime: number }).cookTime} min
                 </Text>
               </View>
@@ -453,11 +456,11 @@ function MessageBubble({
           {message.richContent.type === 'grocery' && (
             <View
               style={{
-                backgroundColor: TOKENS.colors.white,
+                backgroundColor: colors.surface,
                 borderRadius: 14,
                 padding: 12,
                 borderWidth: 1,
-                borderColor: TOKENS.colors.borderLight,
+                borderColor: colors.borderLight,
                 gap: 6,
               }}
             >
@@ -469,10 +472,10 @@ function MessageBubble({
                       height: 18,
                       borderRadius: 4,
                       borderWidth: 1.5,
-                      borderColor: TOKENS.colors.border,
+                      borderColor: colors.border,
                     }}
                   />
-                  <Text style={{ fontSize: 14, color: TOKENS.colors.text }}>{item.name}</Text>
+                  <Text style={{ fontSize: 14, color: colors.text }}>{item.name}</Text>
                 </View>
               ))}
             </View>
@@ -481,16 +484,16 @@ function MessageBubble({
           {message.richContent.type === 'savings' && (
             <View
               style={{
-                backgroundColor: `${TOKENS.colors.accent}12`,
+                backgroundColor: `${colors.accent}12`,
                 borderRadius: 14,
                 padding: 16,
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontSize: 32, fontWeight: '700', color: TOKENS.colors.accent }}>
+              <Text style={{ fontSize: 32, fontWeight: '700', color: colors.accent }}>
                 ${(message.richContent as { amount: number }).amount.toFixed(2)}
               </Text>
-              <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary, marginTop: 4 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
                 saved this month · {(message.richContent as { meals: number }).meals} meals cooked
               </Text>
             </View>
@@ -526,7 +529,7 @@ function TypingDot({ delay }: { delay: number }) {
           width: 8,
           height: 8,
           borderRadius: 4,
-          backgroundColor: TOKENS.colors.textMuted,
+          backgroundColor: colors.textMuted,
         },
         style,
       ]}
@@ -545,7 +548,7 @@ function TypingIndicator() {
         paddingVertical: 14,
         borderRadius: 18,
         borderBottomLeftRadius: 4,
-        backgroundColor: TOKENS.colors.inputBg,
+        backgroundColor: colors.inputBg,
       }}
     >
       <TypingDot delay={0} />

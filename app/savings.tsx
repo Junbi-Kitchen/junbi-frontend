@@ -7,6 +7,7 @@ import Svg, { Path, Circle, Defs, LinearGradient, Stop, Line } from 'react-nativ
 import { useRouter } from 'expo-router';
 import { ArrowLeft, TrendingUp, TrendingDown, DollarSign } from 'lucide-react-native';
 import { useSavingsStore } from '../stores/savingsStore';
+import { useTheme } from '../hooks/useTheme';
 import { TOKENS } from '../lib/tokens';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -18,6 +19,7 @@ type TimeRange = 'month' | 'all';
 
 export default function SavingsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const savings = useSavingsStore();
   const [range, setRange] = useState<TimeRange>('month');
 
@@ -85,7 +87,7 @@ export default function SavingsScreen() {
   const isPositive = changePercent >= 0;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: TOKENS.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View
         style={{
@@ -101,13 +103,13 @@ export default function SavingsScreen() {
           accessibilityLabel="Go back"
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <ArrowLeft size={24} color={TOKENS.colors.text} />
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text
           style={{
             fontSize: TOKENS.typography.sizes.xl,
             fontWeight: TOKENS.typography.weights.bold,
-            color: TOKENS.colors.text,
+            color: colors.text,
           }}
         >
           Savings Analysis
@@ -121,7 +123,7 @@ export default function SavingsScreen() {
       >
         {/* Summary stat */}
         <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
-          <Text style={{ fontSize: 14, color: TOKENS.colors.textSecondary }}>
+          <Text style={{ fontSize: 14, color: colors.textSecondary }}>
             {range === 'month' ? 'This month' : 'All time'}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
@@ -129,7 +131,7 @@ export default function SavingsScreen() {
               style={{
                 fontSize: 40,
                 fontWeight: '700',
-                color: TOKENS.colors.accent,
+                color: colors.accent,
               }}
             >
               ${range === 'month'
@@ -145,19 +147,19 @@ export default function SavingsScreen() {
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 999,
-                  backgroundColor: isPositive ? TOKENS.colors.successLight : TOKENS.colors.errorLight,
+                  backgroundColor: isPositive ? colors.successLight : colors.errorLight,
                 }}
               >
                 {isPositive ? (
-                  <TrendingUp size={14} color={TOKENS.colors.success} />
+                  <TrendingUp size={14} color={colors.success} />
                 ) : (
-                  <TrendingDown size={14} color={TOKENS.colors.error} />
+                  <TrendingDown size={14} color={colors.error} />
                 )}
                 <Text
                   style={{
                     fontSize: 13,
                     fontWeight: '600',
-                    color: isPositive ? TOKENS.colors.success : TOKENS.colors.error,
+                    color: isPositive ? colors.success : colors.error,
                   }}
                 >
                   {isPositive ? '+' : ''}{changePercent}%
@@ -165,7 +167,7 @@ export default function SavingsScreen() {
               </View>
             )}
           </View>
-          <Text style={{ fontSize: 13, color: TOKENS.colors.textSecondary, marginTop: 2 }}>
+          <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
             saved from food waste
           </Text>
         </View>
@@ -176,7 +178,7 @@ export default function SavingsScreen() {
             flexDirection: 'row',
             marginHorizontal: 20,
             marginTop: 20,
-            backgroundColor: TOKENS.colors.inputBg,
+            backgroundColor: colors.inputBg,
             borderRadius: 10,
             padding: 3,
           }}
@@ -190,7 +192,7 @@ export default function SavingsScreen() {
                 flex: 1,
                 paddingVertical: 8,
                 borderRadius: 8,
-                backgroundColor: range === r ? TOKENS.colors.white : 'transparent',
+                backgroundColor: range === r ? colors.surface : 'transparent',
                 alignItems: 'center',
                 ...(range === r
                   ? {
@@ -207,7 +209,7 @@ export default function SavingsScreen() {
                 style={{
                   fontSize: 14,
                   fontWeight: range === r ? '600' : '400',
-                  color: range === r ? TOKENS.colors.text : TOKENS.colors.textSecondary,
+                  color: range === r ? colors.text : colors.textSecondary,
                 }}
               >
                 {r === 'month' ? 'This Month' : 'All Time'}
@@ -221,22 +223,22 @@ export default function SavingsScreen() {
           style={{
             marginHorizontal: 20,
             marginTop: 20,
-            backgroundColor: TOKENS.colors.white,
+            backgroundColor: colors.surface,
             borderRadius: 16,
             padding: 20,
             borderWidth: 1,
-            borderColor: TOKENS.colors.borderLight,
+            borderColor: colors.borderLight,
           }}
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: TOKENS.colors.accent }} />
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>Saved</Text>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent }} />
+                <Text style={{ fontSize: 12, color: colors.textSecondary }}>Saved</Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: TOKENS.colors.error }} />
-                <Text style={{ fontSize: 12, color: TOKENS.colors.textSecondary }}>Wasted</Text>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.error }} />
+                <Text style={{ fontSize: 12, color: colors.textSecondary }}>Wasted</Text>
               </View>
             </View>
           </View>
@@ -244,8 +246,8 @@ export default function SavingsScreen() {
           <Svg width={CHART_W} height={CHART_H + 30}>
             <Defs>
               <LinearGradient id="savedGrad" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor={TOKENS.colors.accent} stopOpacity="0.2" />
-                <Stop offset="1" stopColor={TOKENS.colors.accent} stopOpacity="0" />
+                <Stop offset="0" stopColor={colors.accent} stopOpacity="0.2" />
+                <Stop offset="1" stopColor={colors.accent} stopOpacity="0" />
               </LinearGradient>
             </Defs>
 
@@ -257,7 +259,7 @@ export default function SavingsScreen() {
                 y1={CHART_H - pct * (CHART_H - 20)}
                 x2={CHART_W}
                 y2={CHART_H - pct * (CHART_H - 20)}
-                stroke={TOKENS.colors.borderLight}
+                stroke={colors.borderLight}
                 strokeWidth={1}
                 strokeDasharray="4,4"
               />
@@ -283,7 +285,7 @@ export default function SavingsScreen() {
               <Path
                 d={savedPath}
                 fill="none"
-                stroke={TOKENS.colors.accent}
+                stroke={colors.accent}
                 strokeWidth={2.5}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -295,7 +297,7 @@ export default function SavingsScreen() {
               <Path
                 d={wastedPath}
                 fill="none"
-                stroke={TOKENS.colors.error}
+                stroke={colors.error}
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -310,8 +312,8 @@ export default function SavingsScreen() {
                 cx={i * stepX}
                 cy={CHART_H - (d.saved / maxVal) * (CHART_H - 20)}
                 r={4}
-                fill={TOKENS.colors.accent}
-                stroke={TOKENS.colors.white}
+                fill={colors.accent}
+                stroke={colors.surface}
                 strokeWidth={2}
               />
             ))}
@@ -323,8 +325,8 @@ export default function SavingsScreen() {
                 cx={i * stepX}
                 cy={CHART_H - (d.wasted / maxVal) * (CHART_H - 20)}
                 r={3}
-                fill={TOKENS.colors.error}
-                stroke={TOKENS.colors.white}
+                fill={colors.error}
+                stroke={colors.surface}
                 strokeWidth={2}
               />
             ))}
@@ -337,7 +339,7 @@ export default function SavingsScreen() {
                 key={i}
                 style={{
                   fontSize: 11,
-                  color: TOKENS.colors.textMuted,
+                  color: colors.textMuted,
                   textAlign: 'center',
                 }}
               >
@@ -353,7 +355,7 @@ export default function SavingsScreen() {
             style={{
               fontSize: TOKENS.typography.sizes.xs,
               fontWeight: TOKENS.typography.weights.semibold,
-              color: TOKENS.colors.textMuted,
+              color: colors.textMuted,
               textTransform: 'uppercase',
               letterSpacing: 0.8,
               marginBottom: 10,
@@ -365,24 +367,24 @@ export default function SavingsScreen() {
             <StatCard
               label="Saved this month"
               value={`$${savings.totalSavedThisMonth.toFixed(0)}`}
-              color={TOKENS.colors.accent}
+              color={colors.accent}
             />
             <StatCard
               label="Wasted this month"
               value={`$${savings.totalWastedThisMonth.toFixed(0)}`}
-              color={TOKENS.colors.error}
+              color={colors.error}
             />
           </View>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
             <StatCard
               label="Save rate"
               value={`${saveRate}%`}
-              color={TOKENS.colors.success}
+              color={colors.success}
             />
             <StatCard
               label="Last month"
               value={`$${savings.lastMonthSaved.toFixed(0)}`}
-              color={TOKENS.colors.primary}
+              color={colors.primary}
             />
           </View>
         </View>
@@ -393,7 +395,7 @@ export default function SavingsScreen() {
             style={{
               fontSize: TOKENS.typography.sizes.xs,
               fontWeight: TOKENS.typography.weights.semibold,
-              color: TOKENS.colors.textMuted,
+              color: colors.textMuted,
               textTransform: 'uppercase',
               letterSpacing: 0.8,
               marginBottom: 10,
@@ -403,10 +405,10 @@ export default function SavingsScreen() {
           </Text>
           <View
             style={{
-              backgroundColor: TOKENS.colors.white,
+              backgroundColor: colors.surface,
               borderRadius: 14,
               borderWidth: 1,
-              borderColor: TOKENS.colors.borderLight,
+              borderColor: colors.borderLight,
               overflow: 'hidden',
             }}
           >
@@ -419,7 +421,7 @@ export default function SavingsScreen() {
                   paddingHorizontal: 14,
                   paddingVertical: 12,
                   borderBottomWidth: idx < 7 ? 1 : 0,
-                  borderBottomColor: TOKENS.colors.borderLight,
+                  borderBottomColor: colors.borderLight,
                 }}
               >
                 <View
@@ -428,24 +430,24 @@ export default function SavingsScreen() {
                     height: 28,
                     borderRadius: 8,
                     backgroundColor: entry.action === 'used'
-                      ? TOKENS.colors.successLight
-                      : TOKENS.colors.errorLight,
+                      ? colors.successLight
+                      : colors.errorLight,
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 10,
                   }}
                 >
                   {entry.action === 'used' ? (
-                    <DollarSign size={14} color={TOKENS.colors.success} />
+                    <DollarSign size={14} color={colors.success} />
                   ) : (
-                    <TrendingDown size={14} color={TOKENS.colors.error} />
+                    <TrendingDown size={14} color={colors.error} />
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: TOKENS.colors.text }}>
+                  <Text style={{ fontSize: 14, fontWeight: '500', color: colors.text }}>
                     {entry.itemName}
                   </Text>
-                  <Text style={{ fontSize: 11, color: TOKENS.colors.textSecondary, marginTop: 1 }}>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 1 }}>
                     {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </Text>
                 </View>
@@ -453,7 +455,7 @@ export default function SavingsScreen() {
                   style={{
                     fontSize: 14,
                     fontWeight: '600',
-                    color: entry.action === 'used' ? TOKENS.colors.success : TOKENS.colors.error,
+                    color: entry.action === 'used' ? colors.success : colors.error,
                   }}
                 >
                   {entry.action === 'used' ? '+' : '-'}${entry.estimatedValue.toFixed(2)}
@@ -476,19 +478,20 @@ function StatCard({
   value: string;
   color: string;
 }) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
         flex: 1,
-        backgroundColor: TOKENS.colors.white,
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 14,
         borderWidth: 1,
-        borderColor: TOKENS.colors.borderLight,
+        borderColor: colors.borderLight,
       }}
     >
       <Text style={{ fontSize: 22, fontWeight: '700', color }}>{value}</Text>
-      <Text style={{ fontSize: 11, color: TOKENS.colors.textSecondary, marginTop: 4 }}>
+      <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4 }}>
         {label}
       </Text>
     </View>
