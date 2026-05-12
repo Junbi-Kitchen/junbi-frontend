@@ -5,6 +5,14 @@ import type { Recipe, RecipeCollection, DietaryTag } from '../types';
 import { recipesApi } from '../lib/api/recipes';
 import { collectionsApi } from '../lib/api/collections';
 
+interface TranslationResult {
+  language: string;
+  title: string;
+  description: string;
+  ingredients: Array<{ name: string; quantity: number; unit: string; category?: string }>;
+  steps: Array<{ stepNumber?: number; instruction: string; timerMinutes?: number }>;
+}
+
 interface RecipeStore {
   feed: Recipe[];
   feedCursor: string | null;
@@ -13,6 +21,8 @@ interface RecipeStore {
   importQueue: Recipe[];
   activeFilters: DietaryTag[];
   isLoading: boolean;
+  pinnedRecipes: Record<string, string[]>; // collectionId -> pinned recipeId[]
+  translationCache: Record<string, TranslationResult>; // `${recipeId}-${language}` -> result
 
   fetchSaved: () => Promise<void>;
   fetchCollections: () => Promise<void>;
@@ -28,6 +38,10 @@ interface RecipeStore {
   removeFromCollection: (collectionId: string, recipeId: string) => Promise<void>;
   deleteCollection: (id: string) => Promise<void>;
   getRecipesForCollection: (collectionId: string) => Recipe[];
+  pinRecipe: (collectionId: string, recipeId: string) => void;
+  unpinRecipe: (collectionId: string, recipeId: string) => void;
+  getCachedTranslation: (recipeId: string, language: string) => TranslationResult | null;
+  cacheTranslation: (recipeId: string, language: string, result: TranslationResult) => void;
 }
 
 export const useRecipeStore = create<RecipeStore>((set, get) => ({
@@ -38,6 +52,8 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   importQueue: [],
   activeFilters: [],
   isLoading: false,
+  pinnedRecipes: {},
+  translationCache: {},
 
   fetchSaved: async () => {
     set({ isLoading: true });
@@ -126,11 +142,47 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   },
 
   getRecipesForCollection: (collectionId) => {
-    const { collections, saved } = get();
+    const { collections, saved, pinnedRecipes } = get();
     const col = collections.find((c) => c.id === collectionId);
     if (!col) return [];
-    return col.recipeIds
+    const pinned = pinnedRecipes[collectionId] ?? [];
+    const recipes = col.recipeIds
       .map((id) => saved.find((r) => r.id === id))
       .filter((r): r is Recipe => r !== undefined);
+    return [
+      ...recipes.filter((r) => pinned.includes(r.id)),
+      ...recipes.filter((r) => !pinned.includes(r.id)),
+    ];
+  },
+
+  pinRecipe: (collectionId, recipeId) => {
+    set((state) => ({
+      pinnedRecipes: {
+        ...state.pinnedRecipes,
+        [collectionId]: [...(state.pinnedRecipes[collectionId] ?? []).filter((id) => id !== recipeId), recipeId],
+      },
+    }));
+  },
+
+  unpinRecipe: (collectionId, recipeId) => {
+    set((state) => ({
+      pinnedRecipes: {
+        ...state.pinnedRecipes,
+        [collectionId]: (state.pinnedRecipes[collectionId] ?? []).filter((id) => id !== recipeId),
+      },
+    }));
+  },
+
+  getCachedTranslation: (recipeId, language) => {
+    return get().translationCache[`${recipeId}-${language}`] ?? null;
+  },
+
+  cacheTranslation: (recipeId, language, result) => {
+    set((state) => ({
+      translationCache: {
+        ...state.translationCache,
+        [`${recipeId}-${language}`]: result,
+      },
+    }));
   },
 }));

@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, Image, Dimensions, TouchableOpacity } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Instagram, Play, Globe, PenLine } from 'lucide-react-native';
+import { Instagram, Play, Globe, PenLine, Youtube } from 'lucide-react-native';
 import { Badge } from '../ui/Badge';
 import { truncate, formatCookTime } from '../../lib/utils';
 import { TOKENS } from '../../lib/tokens';
@@ -15,6 +15,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SOURCE_ICONS = {
   instagram: Instagram,
   tiktok: Play,
+  youtube: Youtube,
   url: Globe,
   manual: PenLine,
 };

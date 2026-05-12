@@ -44,9 +44,28 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return res.json();
 }
 
+async function uploadFormData<T>(path: string, formData: FormData): Promise<T> {
+  const user = auth.currentUser;
+  if (!user) throw new ApiError(401, 'Not authenticated');
+  const token = await user.getIdToken();
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, err);
+  }
+  return res.json();
+}
+
 export const api = {
   get:    <T>(path: string) => request<T>('GET', path),
   post:   <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   patch:  <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   delete: <T>(path: string) => request<T>('DELETE', path),
+  upload: <T>(path: string, formData: FormData) => uploadFormData<T>(path, formData),
 };

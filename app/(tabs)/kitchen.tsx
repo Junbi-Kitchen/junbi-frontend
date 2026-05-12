@@ -7,6 +7,7 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
@@ -20,8 +21,10 @@ import {
   ChefHat,
   Trash2,
   UtensilsCrossed,
+  Pin,
+  PinOff,
 } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { BottomSheetWrapper } from '../../components/ui/BottomSheetWrapper';
@@ -59,8 +62,9 @@ type TabView = 'pantry' | 'recipes';
 export default function KitchenScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const [loading] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabView>('pantry');
+  const [activeTab, setActiveTab] = useState<TabView>(tabParam === 'recipes' ? 'recipes' : 'pantry');
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<PantryItem | null>(null);
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
@@ -77,7 +81,7 @@ export default function KitchenScreen() {
   const tabBarHeight = 46 + Math.max(insets.bottom, 8);
   const { items, logAction, updateQuantity, removeItem } = usePantry();
   const { logUsed, logTossed } = useSavingsStore();
-  const { saved, collections, createCollection, getRecipesForCollection } = useRecipeStore();
+  const { saved, collections, createCollection, getRecipesForCollection, pinnedRecipes, pinRecipe, unpinRecipe, unsaveRecipe, removeFromCollection } = useRecipeStore();
 
   const filteredItems = (() => {
     const filter = PANTRY_FILTERS.find((f) => f.key === activeFilter);
@@ -135,13 +139,19 @@ export default function KitchenScreen() {
   if (activeCollection) {
     const col = collections.find((c) => c.id === activeCollection);
     const colRecipes = col ? getRecipesForCollection(col.id) : [];
+    const pinned = pinnedRecipes[activeCollection] ?? [];
     return (
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
         <CollectionDetail
           collection={col!}
           recipes={colRecipes}
+          pinnedIds={pinned}
           onBack={() => setActiveCollection(null)}
           onRecipePress={(id) => router.push(`/recipe/${id}`)}
+          onImport={() => router.push({ pathname: '/import', params: { collectionId: col!.id, collectionName: col!.name } })}
+          onPin={(id) => pinRecipe(activeCollection, id)}
+          onUnpin={(id) => unpinRecipe(activeCollection, id)}
+          onRemove={(id) => removeFromCollection(activeCollection, id)}
           tabBarHeight={tabBarHeight}
         />
       </SafeAreaView>
@@ -472,6 +482,7 @@ export default function KitchenScreen() {
                     key={recipe.id}
                     recipe={recipe}
                     onPress={() => router.push(`/recipe/${recipe.id}`)}
+                    onDelete={() => unsaveRecipe(recipe.id)}
                   />
                 ))}
               </>
@@ -607,21 +618,50 @@ function getItemEmoji(category: IngredientCategory): string {
 
 // ─── Recipe list row ─────────────────────────────────────────
 
-function RecipeListRow({ recipe, onPress }: { recipe: Recipe; onPress: () => void }) {
+function RecipeListRow({ recipe, onPress, isPinned, onTogglePin, onDelete }: {
+  recipe: Recipe; onPress: () => void;
+  isPinned?: boolean; onTogglePin?: () => void;
+  onDelete?: () => void;
+}) {
   const { colors } = useTheme();
-  return (
+  const swipeableRef = useRef<Swipeable>(null);
+
+  const renderRightActions = () => (
+    <TouchableOpacity
+      onPress={() => {
+        swipeableRef.current?.close();
+        onDelete?.();
+      }}
+      accessibilityLabel="Delete recipe"
+      activeOpacity={0.85}
+      style={{
+        width: 80,
+        backgroundColor: '#FF3B30',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Trash2 size={22} color="#fff" />
+      <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700', marginTop: 4 }}>Delete</Text>
+    </TouchableOpacity>
+  );
+
+  const rowContent = (
     <TouchableOpacity
       onPress={onPress}
       accessibilityLabel={`Open ${recipe.title}`}
-      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10 }}
+      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10, backgroundColor: colors.background }}
     >
       <Image source={{ uri: recipe.imageUri }} style={{ width: 56, height: 56, borderRadius: 12 }} />
       <View style={{ flex: 1, marginLeft: 14 }}>
-        <Text numberOfLines={1} style={{
-          fontSize: TOKENS.typography.sizes.md, fontWeight: TOKENS.typography.weights.medium, color: colors.text,
-        }}>
-          {recipe.title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {isPinned && <Pin size={12} color={colors.primary} />}
+          <Text numberOfLines={1} style={{
+            flex: 1, fontSize: TOKENS.typography.sizes.md, fontWeight: TOKENS.typography.weights.medium, color: colors.text,
+          }}>
+            {recipe.title}
+          </Text>
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
             <Clock size={11} color={colors.textSecondary} />
@@ -632,16 +672,48 @@ function RecipeListRow({ recipe, onPress }: { recipe: Recipe; onPress: () => voi
           {recipe.tags[0] && <Badge label={recipe.tags[0]} variant="dietary" tag={recipe.tags[0]} size="sm" />}
         </View>
       </View>
-      <ChevronRight size={16} color={colors.textMuted} />
+      {onTogglePin ? (
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation?.(); onTogglePin(); }}
+          accessibilityLabel={isPinned ? 'Unpin recipe' : 'Pin recipe'}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={{ marginLeft: 8, padding: 4 }}
+        >
+          {isPinned
+            ? <PinOff size={18} color={colors.primary} />
+            : <Pin size={18} color={colors.textMuted} />}
+        </TouchableOpacity>
+      ) : (
+        <ChevronRight size={16} color={colors.textMuted} />
+      )}
     </TouchableOpacity>
+  );
+
+  if (!onDelete) return rowContent;
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      friction={2}
+      rightThreshold={40}
+      overshootRight={false}
+    >
+      {rowContent}
+    </Swipeable>
   );
 }
 
 // ─── Collection detail view ──────────────────────────────────
 
-function CollectionDetail({ collection, recipes, onBack, onRecipePress, tabBarHeight }: {
+function CollectionDetail({ collection, recipes, pinnedIds, onBack, onRecipePress, onImport, onPin, onUnpin, onRemove, tabBarHeight }: {
   collection: RecipeCollection; recipes: Recipe[];
-  onBack: () => void; onRecipePress: (id: string) => void; tabBarHeight: number;
+  pinnedIds: string[];
+  onBack: () => void; onRecipePress: (id: string) => void;
+  onImport: () => void;
+  onPin: (id: string) => void; onUnpin: (id: string) => void;
+  onRemove: (id: string) => void;
+  tabBarHeight: number;
 }) {
   const { colors } = useTheme();
   return (
@@ -651,11 +723,24 @@ function CollectionDetail({ collection, recipes, onBack, onRecipePress, tabBarHe
         backgroundColor: colors.primaryMuted,
         borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
       }}>
-        <TouchableOpacity onPress={onBack} accessibilityLabel="Go back to collections" style={{ marginBottom: 12 }}>
-          <Text style={{ fontSize: TOKENS.typography.sizes.sm, fontWeight: TOKENS.typography.weights.semibold, color: colors.primary }}>
-            ← Back
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <TouchableOpacity onPress={onBack} accessibilityLabel="Go back to collections">
+            <Text style={{ fontSize: TOKENS.typography.sizes.sm, fontWeight: TOKENS.typography.weights.semibold, color: colors.primary }}>
+              ← Back
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onImport}
+            accessibilityLabel="Import recipe into this collection"
+            style={{
+              flexDirection: 'row', alignItems: 'center', gap: 4,
+              backgroundColor: colors.primary, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999,
+            }}
+          >
+            <Import size={13} color="#fff" />
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Import</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={{ fontSize: 40, marginBottom: 8 }}>{collection.emoji}</Text>
         <Text style={{ fontSize: TOKENS.typography.sizes['2xl'], fontWeight: TOKENS.typography.weights.bold, color: colors.text }}>
           {collection.name}
@@ -670,11 +755,27 @@ function CollectionDetail({ collection, recipes, onBack, onRecipePress, tabBarHe
         </Text>
       </View>
       {recipes.length === 0 ? (
-        <EmptyState icon={BookmarkCheck} title="Empty collection" subtitle="Save recipes and add them here." />
+        <EmptyState
+          icon={BookmarkCheck}
+          title="Empty collection"
+          subtitle="Tap Import to add a YouTube recipe or any URL."
+          ctaLabel="Import Recipe"
+          onCta={onImport}
+        />
       ) : (
-        recipes.map((recipe) => (
-          <RecipeListRow key={recipe.id} recipe={recipe} onPress={() => onRecipePress(recipe.id)} />
-        ))
+        recipes.map((recipe) => {
+          const isPinned = pinnedIds.includes(recipe.id);
+          return (
+            <RecipeListRow
+              key={recipe.id}
+              recipe={recipe}
+              isPinned={isPinned}
+              onPress={() => onRecipePress(recipe.id)}
+              onTogglePin={() => isPinned ? onUnpin(recipe.id) : onPin(recipe.id)}
+              onDelete={() => onRemove(recipe.id)}
+            />
+          );
+        })
       )}
     </ScrollView>
   );

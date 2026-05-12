@@ -31,7 +31,7 @@ export type OrderStatus =
   | 'picked_up'
   | 'cancelled';
 
-export type ImportSource = 'instagram' | 'tiktok' | 'url' | 'manual';
+export type ImportSource = 'instagram' | 'tiktok' | 'youtube' | 'url' | 'manual';
 
 export interface Nutrition {
   calories: number;

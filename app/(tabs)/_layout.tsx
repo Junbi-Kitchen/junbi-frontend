@@ -129,6 +129,10 @@ export default function TabLayout() {
         manualAddRef.current?.expand();
       } else if (action === 'import') {
         router.push('/import');
+      } else if (action === 'create-recipe') {
+        router.push('/create-recipe');
+      } else if (action === 'scan-recipe') {
+        router.push('/scan-recipe');
       }
     }, 350);
   }, [router]);
@@ -151,7 +155,7 @@ export default function TabLayout() {
       </Tabs>
 
       {/* Global add options sheet */}
-      <BottomSheetWrapper sheetRef={globalAddRef} snapPoints={['52%']} initialIndex={-1}>
+      <BottomSheetWrapper sheetRef={globalAddRef} snapPoints={['72%']} initialIndex={-1}>
         <GlobalAddSheet onSelect={handleAddAction} />
       </BottomSheetWrapper>
 
