@@ -1,4 +1,4 @@
-# CLAUDE.md — Gook Frontend
+# CLAUDE.md — Junbi Frontend
 
 ## What This App Does (in one sentence)
 AI-powered kitchen assistant that tracks your pantry, tells you what to cook before food expires, and orders groceries with one tap — saving the average family ~$2,900/year in food waste.
@@ -250,14 +250,57 @@ Show money saved prominently. This is our retention hook and viral loop.
 
 ---
 
-## Backend Integration Status
+## Backend Integration
 
-Most features now call the real FastAPI backend via Zustand stores + `lib/api/`. `lib/mockData.ts` is used only for seeding stores during development when the backend is unreachable.
+### How API Calls Work
 
-Still pending backend integration:
-- **AI agent flows** (Recipe Finder, Meal Planner, Smart Grocery, Savings Coach) — UI scaffolding exists in `chat.tsx`, no backend endpoints yet
-- **Receipt OCR** — frontend `useReceiptScanner` returns mock data and never calls the backend; backend also returns mock data and ignores the uploaded image
-- **Recipe URL import** — backend creates a blank stub row, no actual URL scraping
+All API calls go through `lib/api.ts` (base client) → `lib/api/<domain>.ts` (per-domain module) → Zustand store action.
+
+**Base client auto-injects Firebase token:**
+```typescript
+// lib/api.ts — simplified
+const token = await firebaseUser.getIdToken();
+fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+```
+
+**Backend URL resolution (dev):**
+- `EXPO_PUBLIC_API_URL` if set in `.env`
+- Otherwise auto-detects from Expo Metro bundler host (works on same WiFi)
+- Android Emulator: set `EXPO_PUBLIC_API_URL=http://10.0.2.2:8000`
+
+**Auth flow (full sequence):**
+1. User signs in → Firebase SDK returns ID token
+2. `_layout.tsx` `onAuthStateChanged` fires → routes to tabs
+3. `userStore.fetchProfile()` called → hits `GET /users/me` with Bearer token
+4. Backend verifies token, auto-creates user rows if first visit, returns full profile
+5. All subsequent API calls use `getIdToken()` (auto-refreshes near expiry)
+
+### Backend Integration Status
+
+Most features call the real FastAPI backend (localhost:8000 in dev) via Zustand stores + `lib/api/`. `lib/mockData.ts` seeds stores for dev when backend is unreachable.
+
+| Feature | Status |
+|---|---|
+| Pantry CRUD + ingredient search | ✅ Live |
+| Pantry scan (camera → Claude vision) | ✅ Live |
+| Recipe feed, saved, detail | ✅ Live |
+| Recipe image parsing | ✅ Live |
+| User profile + preferences | ✅ Live |
+| Grocery list (generate, manage, aisle grouping) | ✅ Live |
+| Savings tracking + waste log | ✅ Live |
+| AI agent flows (Recipe Finder, Meal Planner, Smart Grocery, Savings Coach) | 🟡 Mocked — UI exists, no backend endpoints wired |
+| Receipt OCR | 🟡 Mocked — `useReceiptScanner` returns stub, backend ignores image |
+| Recipe URL import / scraping | 🟡 Stub — backend creates blank row, no scraping |
+
+### Development Commands
+
+```bash
+npm install --legacy-peer-deps   # install deps
+npx expo start                   # start dev server (QR code for Expo Go)
+npx expo start --clear           # use after changing any config file
+npx expo start --android         # Android emulator
+npx expo start --ios             # iOS simulator
+```
 
 ---
 

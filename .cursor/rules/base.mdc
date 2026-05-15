@@ -1,0 +1,43 @@
+---
+description: Core conventions for all Junbi code — applies everywhere
+alwaysApply: true
+---
+
+# Junbi — Base Conventions
+
+**App:** Junbi — AI kitchen assistant. This repo is `gook-frontend` (React Native + Expo mobile app).
+
+## Naming
+
+- Components: PascalCase (`PriorityCard`, `PantryGrid`)
+- Files: kebab-case (`priority-card.tsx`, `pantry-grid.tsx`)
+- Hooks: camelCase with `use` prefix (`usePantryItems`)
+- TypeScript types: PascalCase (`PantryItem`, `Recipe`)
+- API JSON keys: camelCase — DB columns: snake_case (mapped in backend route handlers)
+
+## TypeScript
+
+- Strict mode always. Never use `any`.
+- Domain types in `types/index.ts`. Component prop interfaces defined inline.
+
+## Package Manager
+
+- `npm` with `--legacy-peer-deps`
+
+## Commit Format
+
+```
+feat: add pantry bulk import
+fix: flash list scroll jank on kitchen tab
+chore: update dependencies
+```
+Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
+
+## Error Handling
+
+- Catch at the store action level, surface via UI state (loading / error flags in Zustand)
+- Never console.log and ignore errors
+
+## No Comments on What the Code Does
+
+Only add comments for non-obvious WHY (workarounds, constraints, subtle invariants).

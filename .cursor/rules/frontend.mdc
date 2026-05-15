@@ -1,0 +1,71 @@
+---
+description: Frontend rules for this React Native + Expo codebase
+alwaysApply: false
+globs: ["app/**", "components/**", "stores/**", "hooks/**", "lib/**", "types/**"]
+---
+
+# Junbi Frontend Rules
+
+## Stack
+
+React Native + Expo 54 (managed workflow), Expo Router v6, NativeWind, Zustand, TanStack React Query, Firebase Auth, TypeScript strict.
+
+## Styling
+
+- NativeWind `className` for all static styles. `style={{}}` only for computed/animated values.
+- All colors from `lib/tokens.ts` TOKENS.colors. Zero hardcoded hex.
+- No inline static styles — ever.
+
+## Lists
+
+- FlashList always (never FlatList). Set `estimatedItemSize` on every FlashList.
+- Skeleton loader required on every screen that loads async data.
+
+## Modals
+
+- `@gorhom/bottom-sheet` for every modal/sheet. No React Native `Modal`.
+- Use `BottomSheetWrapper` from `components/ui/` for consistent behavior.
+
+## Animations
+
+- Reanimated 4: `useAnimatedStyle`, `withSpring`, `withTiming`.
+- Exception: `Animated.ScrollView` (legacy API) for parallax scroll only.
+
+## Icons
+
+- Lucide React Native only. No other icon libraries.
+
+## State
+
+- Zustand stores (`stores/`) for all app state.
+- Components call store actions — never `lib/api/*` directly from components.
+- TanStack Query for data that needs cache/refetch behavior.
+
+## Forms
+
+- React Hook Form + Zod. `useForm<T>({ resolver: zodResolver(schema) })`.
+- Never validate manually with if/else.
+
+## Navigation
+
+- Expo Router only. Never import from `react-navigation`.
+
+## Accessibility
+
+- `accessibilityLabel` on every touchable element.
+
+## Haptics
+
+- `Haptics.impactAsync(Medium)` on every primary button press.
+
+## PROHIBITIONS
+
+- No FlatList
+- No hardcoded hex colors
+- No `any` TypeScript
+- No `Modal` from React Native core
+- No react-navigation imports
+- No icon libraries other than Lucide
+- No inline static styles
+- No user-facing strings hardcoded in components (use `lib/copy.ts`)
+- Do not edit `lib/tokens.ts`, `babel.config.js`, `metro.config.js`, `tailwind.config.js`, `app.json`
