@@ -20,7 +20,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAF7"
       },
-      "package": "com.junbi.app"
+      "package": "com.junbi.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -31,6 +35,13 @@
     "scheme": "junbi",
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "28a23067-e6ee-45d8-9a65-7761c62ef9d3"
+      }
+    },
+    "owner": "duy1902"
   }
 }
