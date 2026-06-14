@@ -56,9 +56,9 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
 
   const handleCapture = async () => {
     if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.7 });
-    if (photo?.base64) {
-      startScan(photo.base64);
+    const photo = await cameraRef.current.takePictureAsync({ quality: 0.7 });
+    if (photo?.uri) {
+      startScan(photo.uri);
     }
   };
 
@@ -104,11 +104,10 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
   const handlePickFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      base64: true,
       quality: 0.7,
     });
-    if (!result.canceled && result.assets[0]?.base64) {
-      startScan(result.assets[0].base64);
+    if (!result.canceled && result.assets[0]?.uri) {
+      startScan(result.assets[0].uri);
     }
   };
 

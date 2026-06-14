@@ -20,10 +20,11 @@ export const pantryApi = {
       estimatedValue,
     }),
   bulkAdd: (items: AddItemInput[]) => api.post<PantryItem[]>('/pantry/bulk', { items }),
-  scanReceipt: async (base64: string, mimeType = 'image/jpeg'): Promise<ScanResponse> => {
-    const blob = await (await fetch(`data:${mimeType};base64,${base64}`)).blob();
+  scanReceipt: async (uri: string): Promise<ScanResponse> => {
+    const ext = uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
     const form = new FormData();
-    form.append('image', blob, `receipt.${mimeType.split('/')[1]}`);
+    form.append('image', { uri, type: mimeType, name: `receipt.${ext}` } as unknown as Blob);
     return api.upload<ScanResponse>('/pantry/ocr', form);
   },
 };

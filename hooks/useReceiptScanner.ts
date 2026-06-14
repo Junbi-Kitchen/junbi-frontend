@@ -42,12 +42,12 @@ export function useReceiptScanner() {
 
   const hasPermission = permission?.granted ?? false;
 
-  const startScan = useCallback(async (base64: string) => {
+  const startScan = useCallback(async (uri: string) => {
     setIsScanning(true);
     setError(null);
     setScanResult(null);
     try {
-      const result = await pantryApi.scanReceipt(base64);
+      const result = await pantryApi.scanReceipt(uri);
       setScanResult(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Receipt scan failed. Please try again.');
