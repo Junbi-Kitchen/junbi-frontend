@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import { X, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react-native';
 import { SkeletonLoader } from '../ui/SkeletonLoader';
 import { Button } from '../ui/Button';
@@ -98,6 +99,17 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
   const handleClose = () => {
     cancelScan();
     onClose();
+  };
+
+  const handlePickFromLibrary = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      base64: true,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]?.base64) {
+      startScan(result.assets[0].base64);
+    }
   };
 
   // ── Review screen ──────────────────────────────────────────────────────────
@@ -498,13 +510,19 @@ export function ReceiptScanModal({ visible, onClose }: ReceiptScanModalProps) {
           </View>
         ) : null}
 
-        <View style={{ padding: 24, alignItems: 'center' }}>
+        <View style={{ padding: 24, alignItems: 'center', gap: 12 }}>
           <Button
             label={isScanning ? 'Scanning...' : 'Scan Receipt'}
             onPress={handleCapture}
             variant="primary"
             disabled={isScanning || !hasPermission}
             loading={isScanning}
+          />
+          <Button
+            label="Choose from Library"
+            onPress={handlePickFromLibrary}
+            variant="ghost"
+            disabled={isScanning}
           />
         </View>
       </SafeAreaView>
