@@ -10,6 +10,12 @@ expo-env.d.ts
 # Secrets and Environment Variables
 .env
 .env*.local
+.env-old
+
+# Firebase service account keys
+*serviceAccount*.json
+*firebase-adminsdk*.json
+serviceAccountKeyFIREBASE.json
 
 # Claude Code — personal local files
 CLAUDE.local.md
