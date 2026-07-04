@@ -1,5 +1,5 @@
 import { api } from '../api';
-import type { PantryItem } from '../../types';
+import type { PantryItem, ScanResponse } from '../../types';
 
 type AddItemInput = Pick<PantryItem, 'name' | 'quantity' | 'unit' | 'category'> & {
   expiryDate?: string | null;
@@ -20,4 +20,11 @@ export const pantryApi = {
       estimatedValue,
     }),
   bulkAdd: (items: AddItemInput[]) => api.post<PantryItem[]>('/pantry/bulk', { items }),
+  scanReceipt: async (uri: string): Promise<ScanResponse> => {
+    const ext = uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const form = new FormData();
+    form.append('image', { uri, type: mimeType, name: `receipt.${ext}` } as unknown as Blob);
+    return api.upload<ScanResponse>('/pantry/ocr', form);
+  },
 };

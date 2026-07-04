@@ -1,47 +1,60 @@
-// Purpose: Hook managing receipt camera scanning with mocked OCR parsing
-
 import { useState, useCallback } from 'react';
 import { useCameraPermissions } from 'expo-camera';
 import { usePantryStore } from '../stores/pantryStore';
-import { MOCK_PANTRY } from '../lib/mockData';
-import type { PantryItem } from '../types';
+import { pantryApi } from '../lib/api/pantry';
+import type { ScanResponse, PantryItem } from '../types';
 
-function pickRandomItems(count: number): PantryItem[] {
-  const shuffled = [...MOCK_PANTRY].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count).map((item) => ({
-    ...item,
-    id: `scan-${item.id}-${Date.now()}`,
-    addedVia: 'scan' as const,
-    addedAt: new Date().toISOString(),
-  }));
+export const RECEIPT_CATEGORIES = [
+  'produce', 'proteins', 'dairy', 'grains', 'frozen',
+  'pantry', 'condiments', 'spices', 'bakery', 'beverages',
+] as const;
+
+const VALID_CATEGORIES = new Set<string>(RECEIPT_CATEGORIES);
+
+export type EditableReceiptItem = {
+  name: string;
+  quantity: number;
+  unit: string;
+  category: string;
+  total_price: number | null;
+  confidence: 'high' | 'medium' | 'low';
+};
+
+export function toEditableItem(item: ScanResponse['items'][number]): EditableReceiptItem {
+  return {
+    name: item.name,
+    quantity: item.quantity ?? 1,
+    unit: item.unit ?? 'count',
+    category: VALID_CATEGORIES.has(item.category) ? item.category : 'pantry',
+    total_price: item.total_price,
+    confidence: item.confidence,
+  };
 }
+
+type AddInput = Pick<PantryItem, 'name' | 'quantity' | 'unit' | 'category' | 'expiryDate' | 'addedVia'>;
 
 export function useReceiptScanner() {
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<PantryItem[] | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pantryStore = usePantryStore();
 
   const hasPermission = permission?.granted ?? false;
 
-  const startScan = useCallback(async () => {
-    if (!hasPermission) {
-      await requestPermission();
-      return;
-    }
+  const startScan = useCallback(async (uri: string) => {
     setIsScanning(true);
     setError(null);
     setScanResult(null);
-
-    // Mock OCR with 1.5s delay
-    setTimeout(() => {
-      const count = Math.floor(Math.random() * 3) + 3; // 3-5 items
-      const items = pickRandomItems(count);
-      setScanResult(items);
+    try {
+      const result = await pantryApi.scanReceipt(uri);
+      setScanResult(result);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Receipt scan failed. Please try again.');
+    } finally {
       setIsScanning(false);
-    }, 1500);
-  }, [hasPermission, requestPermission]);
+    }
+  }, []);
 
   const cancelScan = useCallback(() => {
     setIsScanning(false);
@@ -49,15 +62,15 @@ export function useReceiptScanner() {
     setError(null);
   }, []);
 
-  const confirmScan = useCallback(() => {
-    if (!scanResult) return;
-    pantryStore.addFromReceipt(scanResult);
+  const confirmScan = useCallback(async (items: AddInput[]) => {
+    await pantryStore.addFromReceipt(items);
     setScanResult(null);
-  }, [scanResult, pantryStore]);
+  }, [pantryStore]);
 
   const retakeScan = useCallback(() => {
     setScanResult(null);
     setIsScanning(false);
+    setError(null);
   }, []);
 
   return {
