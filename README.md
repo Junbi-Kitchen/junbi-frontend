@@ -1,4 +1,4 @@
-# Gook — Frontend
+# Junbi — Frontend
 
 AI-powered kitchen assistant that tracks your pantry, tells you what to cook before food expires, and orders groceries with one tap.
 
@@ -12,6 +12,7 @@ AI-powered kitchen assistant that tracks your pantry, tells you what to cook bef
 - [System Requirements](#system-requirements)
 - [First-Time Setup](#first-time-setup)
 - [Running the App](#running-the-app)
+- [EAS Builds](#eas-builds)
 - [Project Structure](#project-structure)
 - [Tech Stack](#tech-stack)
 - [Key Conventions](#key-conventions)
@@ -29,9 +30,8 @@ Install these before anything else.
 |---|---|---|
 | Node.js | 18 LTS or 20 LTS | [nodejs.org](https://nodejs.org) |
 | npm | 9+ (comes with Node) | — |
-| Expo Go app | SDK 54+ | [iOS App Store](https://apps.apple.com/app/expo-go/id982107779) or [Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent) |
 
-> **This is a mobile-only app (iOS & Android).** It does not run on web — several core libraries (`react-native-mmkv`, `@gorhom/bottom-sheet`, `@shopify/flash-list`, `expo-haptics`) require native device APIs with no browser equivalent.
+> **This is a mobile-only app (iOS & Android).** It does not run on web — several core libraries (`@gorhom/bottom-sheet`, `@shopify/flash-list`, `expo-haptics`) require native device APIs with no browser equivalent.
 
 ### For iOS Simulator (macOS only)
 
@@ -75,29 +75,24 @@ Install these before anything else.
 
 ```bash
 git clone <repo-url>
-cd gook-frontend
+cd junbi-frontend
 ```
 
-### 2. Set up environment variables
-
-Copy the example `.env` file and fill in your values:
-
-```bash
-cp .env.example .env
-```
-
-| Variable | Description |
-|---|---|
-| `EXPO_PUBLIC_FIREBASE_*` | Firebase project config — copy from Firebase Console > Project Settings > Your apps > Web app |
-| `EXPO_PUBLIC_API_URL` | Backend URL — **leave blank in development**. The app auto-detects the backend IP from Expo's dev server, so physical devices on the same WiFi connect without any configuration. Set this only for production (`https://your-api.com`) or Android Emulator (`http://10.0.2.2:8000`). |
-
-### 3. Install dependencies
+### 2. Install dependencies
 
 ```bash
 npm install --legacy-peer-deps
 ```
 
 > **Note:** The `--legacy-peer-deps` flag is needed due to React 19 peer dependency resolution. This is safe and expected for SDK 54.
+
+### 3. Set up environment variables
+
+```bash
+cp .env.example .env
+```
+
+For local development, you don't need to fill in anything — the app auto-detects the backend IP from Metro and Firebase vars are only required for EAS cloud builds (already configured on the team's EAS project). The only time you'd edit `.env` is for Android Emulator (`EXPO_PUBLIC_API_URL=http://10.0.2.2:8000`).
 
 ### 4. Verify your environment
 
@@ -107,60 +102,92 @@ npx expo doctor
 
 Fix any warnings it reports before proceeding.
 
-### 5. Start the development server
-
-```bash
-npx expo start --clear
-```
-
-From the dev menu:
-
-- Press `i` to open in iOS Simulator
-- Press `a` to open in Android Emulator
-- Scan the QR code with **Expo Go** on a physical device
-
 ---
 
 ## Running the App
 
-### On a physical device (easiest)
+There are three ways to run the app, depending on your needs:
 
-1. Install **Expo Go** (SDK 54+) from the App Store or Google Play
+### Option 1: Expo Go (simplest, no install needed)
+
+Best for: pure JS/UI work, quickest to get started.
+
+Limitation: can't run native modules not included in the Expo SDK (e.g. share extensions, push notifications).
+
+1. Install **Expo Go** from the [App Store](https://apps.apple.com/app/expo-go/id982107779) or [Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent)
 2. Make sure your phone and computer are on the **same Wi-Fi network**
-3. Run `npx expo start` and scan the QR code
+3. Start Metro:
+   ```bash
+   npx expo start
+   ```
+4. Scan the QR code with Expo Go
 
-### On iOS Simulator (macOS only)
+### Option 2: Dev Client APK (recommended for physical device)
+
+Best for: testing features that require native modules (share extensions, camera, etc.) while keeping hot reload.
+
+1. Download the dev client APK from EAS (ask a team member for the link) and install it on your Android phone
+2. Start Metro in dev-client mode:
+   ```bash
+   npx expo start --dev-client
+   ```
+3. Open the installed Junbi dev app on your phone — it will detect Metro and show a Connect button
+4. Tap Connect — you now have hot reload with full native module support
+
+> You only need to reinstall the APK when native code changes (new native module, `app.json` plugin changes, or Expo SDK version bump). For all JS/UI changes, just run Metro.
+
+### Option 3: Simulator / Emulator
 
 ```bash
-npm run ios
+npm run ios      # iOS Simulator (macOS only)
+npm run android  # Android Emulator
 ```
 
-### On Android Emulator
+---
 
-```bash
-npm run android
-```
+## EAS Builds
+
+We use [EAS](https://expo.dev/eas) (Expo Application Services) for cloud builds. You need access to the `junbi-kitchen` org on [expo.dev](https://expo.dev).
+
+### Build profiles
+
+| Profile | Command | Output | Use for |
+|---|---|---|---|
+| `development` | `eas build --profile development --platform android` | Dev client APK (hot reload) | Rebuilding after native changes |
+| `preview` | `eas build --profile preview --platform android` | Standalone APK | Testing real production-like behavior, sharing with testers |
+| `production` | `eas build --profile production --platform android` | `.aab` for Play Store | Store submission |
+
+### When to rebuild the dev client
+
+Only rebuild when native code changes — otherwise everyone shares the same APK indefinitely:
+- A new native module is added
+- `app.json` plugins change
+- Expo SDK version bumps
+
+After building, share the new APK download link from [expo.dev](https://expo.dev) → junbi-kitchen → junbi → Builds.
 
 ---
 
 ## Project Structure
 
 ```
-gook-frontend/
+junbi-frontend/
 ├── app/                      # Expo Router screens (file-based routing)
-│   ├── _layout.tsx           # Root layout — providers and navigation shell
+│   ├── _layout.tsx           # Root layout — providers, auth gate, navigation shell
 │   ├── import.tsx            # Recipe import screen
 │   ├── profile.tsx           # User profile (stack screen with back nav)
+│   ├── savings.tsx           # Savings analysis — stock-like graphs + activity log
 │   ├── connected-accounts.tsx # Connected accounts settings
 │   ├── (auth)/
-│   │   └── onboarding.tsx    # 4-step onboarding flow
+│   │   ├── onboarding.tsx    # Starting screen — logo + two CTAs
+│   │   ├── quiz.tsx          # 2-step quiz — dietary preferences + household size
+│   │   └── signin.tsx        # Sign in / sign up with Firebase auth
 │   ├── (tabs)/
 │   │   ├── _layout.tsx       # Custom bottom tab bar (4 tabs)
 │   │   ├── index.tsx         # Home — agentic priority cards + stats sections
 │   │   ├── kitchen.tsx       # Kitchen — pantry grid + recipe collections
 │   │   ├── chat.tsx          # Agent — 4 AI agent flows (Recipe, Meal Plan, Grocery, Savings)
 │   │   └── grocery.tsx       # Grocery list + aisle grouping + Instacart ordering
-│   ├── savings.tsx           # Savings analysis — stock-like graphs + activity log
 │   └── recipe/
 │       └── [id].tsx          # Recipe detail (dynamic route)
 │
@@ -175,16 +202,22 @@ gook-frontend/
 ├── hooks/                    # Custom React hooks
 ├── stores/                   # Zustand global state stores
 ├── lib/
+│   ├── api/                  # Per-domain API modules + base client
 │   ├── tokens.ts             # ALL design tokens — colors, spacing, typography
-│   ├── utils.ts              # Shared utility functions
-│   └── mockData.ts           # Mock data seeding all stores
+│   ├── constants.ts          # App-wide branding (name, URL, tagline)
+│   ├── copy.ts               # ALL UI text strings organized by screen
+│   ├── firebase.ts           # Firebase app + auth initialization
+│   ├── storage.ts            # AsyncStorage wrapper for persisted flags
+│   └── mockData.ts           # Mock data seeding all stores for dev
 ├── types/
 │   └── index.ts              # All TypeScript interfaces and types
 │
+├── assets/                   # App icons and splash screen
 ├── global.css                # Tailwind/NativeWind entry point
 ├── tailwind.config.js        # NativeWind config
 ├── babel.config.js           # Babel config (Reanimated + NativeWind)
 ├── metro.config.js           # Metro bundler config (NativeWind wrapper)
+├── eas.json                  # EAS build profiles
 ├── app.json                  # Expo app config
 └── tsconfig.json             # TypeScript config
 ```
@@ -202,6 +235,7 @@ gook-frontend/
 | NativeWind | ^4.0.36 | Tailwind CSS for React Native |
 | Zustand | ^4.5.2 | Global state management |
 | TanStack React Query | ^5.40.0 | Async/server state |
+| Firebase (JS SDK) | ^12.12.0 | Auth |
 | React Native Reanimated | ~4.1.1 | Animations (swipe, transitions, pulse) |
 | React Native Gesture Handler | ~2.28.0 | Touch gestures |
 | @gorhom/bottom-sheet | ^5.2.8 | All modal sheets |
@@ -211,7 +245,7 @@ gook-frontend/
 | Lucide React Native | ^0.395.0 | Icons |
 | Expo Haptics | ~15.0.8 | Tactile feedback on button press |
 | Expo Camera | ~17.0.10 | Receipt scanner |
-| react-native-mmkv | ^2.12.2 | Fast local storage |
+| expo-dev-client | latest | Custom dev builds with native module support |
 | react-native-svg | 15.12.1 | SVG rendering (charts, icons) |
 
 ---
@@ -229,8 +263,8 @@ gook-frontend/
 
 | Screen | File | Access |
 |---|---|---|
-| Savings Analysis | `savings.tsx` | Tap "This month" section on Home — stock-like graphs, monthly/all-time trends, activity log |
-| Profile | `profile.tsx` | Kitchen screen header icon — stack screen with back navigation |
+| Savings Analysis | `savings.tsx` | Tap "This month" section on Home |
+| Profile | `profile.tsx` | Kitchen screen header icon |
 | Recipe Detail | `recipe/[id].tsx` | Tap any recipe card |
 | Recipe Import | `import.tsx` | Quick action on Home or Kitchen |
 
@@ -300,8 +334,6 @@ Make sure your Expo Go app is updated to SDK 54. The project requires Expo SDK 5
 
 ### `npx expo doctor` reports version mismatches
 
-Run the fix command:
-
 ```bash
 npx expo install --fix -- --legacy-peer-deps
 ```
@@ -326,21 +358,19 @@ After any `babel.config.js` change, restart Metro with `--clear`.
 
 ### EMFILE: too many open files / MustScanSubDirs recrawl (macOS)
 
-Install Watchman:
-
 ```bash
 brew install watchman
 ```
 
-### Expo Go doesn't connect
+### Expo Go / Dev Client doesn't connect
 
 - Confirm your phone and computer are on the same Wi-Fi network
 - Try switching from LAN to Tunnel mode (press `s` in the Expo dev menu)
 - If on a corporate/university network, use a hotspot instead
 
-### App connects to Expo but API calls fail
+### App connects but API calls fail
 
-Check the `[api] BASE_URL =` log in the Metro console. If the URL looks wrong, the auto-detection failed — set `EXPO_PUBLIC_API_URL` explicitly in `.env` to your machine's local IP (e.g. `http://192.168.1.x:8000`).
+Check the `[api] BASE_URL =` log in the Metro console. If it shows `localhost:8000`, the auto-detection failed — set `EXPO_PUBLIC_API_URL` in `.env` to your machine's local IP (e.g. `http://192.168.1.x:8000`). For Android Emulator use `http://10.0.2.2:8000`.
 
 ---
 
